@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A headphone logo -->
+    <path
+        android:fillColor="#BB86FC"
+        android:pathData="M54,20c-17.7,0 -32,14.3 -32,32v12c0,4.4 3.6,8 8,8h6c4.4,0 8,-3.6 8,-8v-16c0,-4.4 -3.6,-8 -8,-8h-4c0,-12.1 9.9,-22 22,-22s22,9.9 22,22h-4c-4.4,0 -8,3.6 -8,8v16c0,4.4 3.6,8 8,8h6c4.4,0 8,-3.6 8,-8v-12c0,-17.7 -14.3,-32 -32,-32z" />
+</vector>
