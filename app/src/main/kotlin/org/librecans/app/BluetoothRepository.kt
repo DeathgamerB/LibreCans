@@ -184,12 +184,18 @@ class BluetoothRepository(private val context: Context) {
 
     private fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
         val uuid = UUID.fromString(uuidStr)
+        var sock: BluetoothSocket? = null
         return try {
-            val sock = device.createRfcommSocketToServiceRecord(uuid)
+            sock = device.createRfcommSocketToServiceRecord(uuid)
             sock.connect()
             sock
         } catch (e: IOException) {
             Log.w(TAG, "Connection failed to UUID $uuidStr: ${e.message}")
+            try {
+                sock?.close()
+            } catch (closeEx: IOException) {
+                // Ignore
+            }
             null
         }
     }
