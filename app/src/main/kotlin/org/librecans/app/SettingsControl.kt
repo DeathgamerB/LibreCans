@@ -3,6 +3,8 @@ package org.librecans.app
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -146,6 +148,8 @@ fun SettingsControl(
             }
         }
 
+        var isFeaturesExpanded by remember { mutableStateOf(false) }
+
         // Settings Controls (Capability-gated extras)
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -156,139 +160,165 @@ fun SettingsControl(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = "Features & Configuration",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                // DSEE (Always supported on V2)
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isFeaturesExpanded = !isFeaturesExpanded }
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "DSEE Upscaling",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Upscale compressed high-frequency audio",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(
-                        checked = state.dsee,
-                        onCheckedChange = { onSetDsee(it) }
+                    Text(
+                        text = "Features & Configuration",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = if (isFeaturesExpanded) "▲" else "▼",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
-                // Auto Power-Off (Capability-gated)
-                if (state.hasAutoPowerOff) {
-                    Divider(color = MaterialTheme.colorScheme.surfaceVariant)
-                    var expanded by remember { mutableStateOf(false) }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                AnimatedVisibility(
+                    visible = isFeaturesExpanded,
+                    enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)),
+                    exit = shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow))
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column {
-                            Text(
-                                text = "Auto Power-Off",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Turn off headphones when idle",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // DSEE (Always supported on V2)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "DSEE Upscaling",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Upscale compressed high-frequency audio",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = state.dsee,
+                                onCheckedChange = { onSetDsee(it) }
                             )
                         }
-                        Box {
-                            Text(
-                                text = apoOptions.getOrElse(state.autoPowerOff) { "Off" },
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { expanded = true }
-                                    .padding(8.dp)
-                            )
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
+
+                        // Auto Power-Off (Capability-gated)
+                        if (state.hasAutoPowerOff) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                            var expanded by remember { mutableStateOf(false) }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                apoOptions.forEachIndexed { index, option ->
-                                    DropdownMenuItem(
-                                        text = { Text(option) },
-                                        onClick = {
-                                            onSetAutoPowerOff(index)
-                                            expanded = false
-                                        }
+                                Column {
+                                    Text(
+                                        text = "Auto Power-Off",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold
                                     )
+                                    Text(
+                                        text = "Turn off headphones when idle",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Box {
+                                    Text(
+                                        text = apoOptions.getOrElse(state.autoPowerOff) { "Off" },
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable { expanded = true }
+                                            .padding(8.dp)
+                                    )
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false }
+                                    ) {
+                                        apoOptions.forEachIndexed { index, option ->
+                                            DropdownMenuItem(
+                                                text = { Text(option) },
+                                                onClick = {
+                                                    onSetAutoPowerOff(index)
+                                                    expanded = false
+                                                }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                }
 
-                // Speak-to-Chat (Capability-gated)
-                if (state.hasSpeakToChat) {
-                    Divider(color = MaterialTheme.colorScheme.surfaceVariant)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Speak-to-Chat",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Pause music automatically when you speak",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        // Speak-to-Chat (Capability-gated)
+                        if (state.hasSpeakToChat) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Speak-to-Chat",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Pause music automatically when you speak",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Switch(
+                                    checked = state.speakToChat,
+                                    onCheckedChange = { onSetSpeakToChat(it) }
+                                )
+                            }
                         }
-                        Switch(
-                            checked = state.speakToChat,
-                            onCheckedChange = { onSetSpeakToChat(it) }
-                        )
-                    }
-                }
 
-                // Adaptive Volume (Capability-gated)
-                if (state.hasAdaptiveVolume) {
-                    Divider(color = MaterialTheme.colorScheme.surfaceVariant)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Adaptive Volume Control",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Auto-adjust volume based on your environment",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        // Adaptive Volume (Capability-gated)
+                        if (state.hasAdaptiveVolume) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Adaptive Volume Control",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Auto-adjust volume based on your environment",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Switch(
+                                    checked = state.adaptiveVolume,
+                                    onCheckedChange = { onSetAdaptiveVolume(it) }
+                                )
+                            }
                         }
-                        Switch(
-                            checked = state.adaptiveVolume,
-                            onCheckedChange = { onSetAdaptiveVolume(it) }
-                        )
                     }
                 }
             }

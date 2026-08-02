@@ -95,6 +95,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
                 looksLikeSonyHeadset(name)
             }
             _pairedDevices.value = bonded
+            autoConnectIfPaired()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load paired devices: ${e.message}")
         }
@@ -105,13 +106,26 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
         return prefixes.any { name.startsWith(it, ignoreCase = true) || name.contains(it, ignoreCase = true) }
     }
 
+    fun getConnectedSonyDevice(): BluetoothDevice? {
+        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return null
+        return try {
+            val isConnectedMethod = BluetoothDevice::class.java.getMethod("isConnected")
+            adapter.bondedDevices.firstOrNull { dev ->
+                val name = dev.name ?: ""
+                looksLikeSonyHeadset(name) && isConnectedMethod.invoke(dev) as Boolean
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check device connection status via reflection: ${e.message}")
+            null
+        }
+    }
+
     private fun autoConnectIfPaired() {
         if (_connectionState.value.connected || _connectionState.value.connecting) return
-        val devices = _pairedDevices.value
-        if (devices.isNotEmpty()) {
-            val autoTarget = devices.first()
-            Log.d(TAG, "Auto-connecting to already paired Sony headset: ${autoTarget.name} (${autoTarget.address})")
-            connectDevice(autoTarget.address)
+        val connectedDevice = getConnectedSonyDevice()
+        if (connectedDevice != null) {
+            Log.d(TAG, "Auto-connecting to already connected system Sony headset: ${connectedDevice.name} (${connectedDevice.address})")
+            connectDevice(connectedDevice.address)
         }
     }
 

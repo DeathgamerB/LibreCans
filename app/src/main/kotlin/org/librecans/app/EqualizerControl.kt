@@ -3,6 +3,10 @@ package org.librecans.app
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -23,6 +27,8 @@ fun EqualizerControl(
     onSetPreset: (EqPreset) -> Unit,
     onSetCustomEq: (clearBass: Int, bands: List<Int>) -> Unit
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+
     val presets = listOf(
         Pair("Off", EqPreset.OFF),
         Pair("Bright", EqPreset.BRIGHT),
@@ -46,13 +52,34 @@ fun EqualizerControl(
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
-            Text(
-                text = "Equalizer",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Equalizer",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = if (isExpanded) "▲" else "▼",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)),
+                exit = shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow))
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(16.dp))
 
             // Presets grid (Material 3 Expressive chip design)
             LazyVerticalGrid(
@@ -64,10 +91,20 @@ fun EqualizerControl(
                     .height(130.dp)
             ) {
                 items(presets) { (label, preset) ->
-                    val isSelected = state.eqPreset == preset
+                    val isSelected = if (preset == EqPreset.MANUAL) {
+                        state.eqPreset == EqPreset.MANUAL ||
+                        state.eqPreset == EqPreset.MANUAL_V2 ||
+                        state.eqPreset == EqPreset.CUSTOM_1 ||
+                        state.eqPreset == EqPreset.CUSTOM_2
+                    } else {
+                        state.eqPreset == preset
+                    }
+                    val chipInteractionSource = remember { MutableInteractionSource() }
                     FilterChip(
                         selected = isSelected,
                         onClick = { onSetPreset(preset) },
+                        interactionSource = chipInteractionSource,
+                        modifier = Modifier.bounceClick(chipInteractionSource),
                         label = {
                             Text(
                                 text = label,
@@ -88,8 +125,11 @@ fun EqualizerControl(
                 }
             }
 
-            // Manual band sliders (only shown when MANUAL (0xA0) is selected)
-            val showSliders = state.eqPreset == EqPreset.MANUAL
+            // Manual band sliders (shown when MANUAL or V2 custom presets are selected)
+            val showSliders = state.eqPreset == EqPreset.MANUAL ||
+                              state.eqPreset == EqPreset.MANUAL_V2 ||
+                              state.eqPreset == EqPreset.CUSTOM_1 ||
+                              state.eqPreset == EqPreset.CUSTOM_2
             AnimatedVisibility(
                 visible = showSliders,
                 enter = expandVertically(),
@@ -174,6 +214,8 @@ fun EqualizerControl(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
+                }
+            }
                 }
             }
         }

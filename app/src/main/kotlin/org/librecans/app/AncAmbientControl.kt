@@ -3,6 +3,7 @@ package org.librecans.app
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -43,9 +44,11 @@ fun AncAmbientControl(
                 val isAmbient = state.ambientSoundControl && state.asmLevel > 0
                 val isOff = !state.ambientSoundControl
 
+                val ncInteraction = remember { MutableInteractionSource() }
                 Button(
                     onClick = { onSetAmbientMode(true, 0, false) },
-                    modifier = Modifier.weight(1f),
+                    interactionSource = ncInteraction,
+                    modifier = Modifier.weight(1f).bounceClick(ncInteraction),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isNc) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         contentColor = if (isNc) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
@@ -56,9 +59,11 @@ fun AncAmbientControl(
                     Text("NC", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
 
+                val ambientInteraction = remember { MutableInteractionSource() }
                 Button(
                     onClick = { onSetAmbientMode(true, 10, state.focusOnVoice) },
-                    modifier = Modifier.weight(1.3f),
+                    interactionSource = ambientInteraction,
+                    modifier = Modifier.weight(1.3f).bounceClick(ambientInteraction),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isAmbient) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         contentColor = if (isAmbient) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
@@ -69,9 +74,11 @@ fun AncAmbientControl(
                     Text("Ambient", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
 
+                val offInteraction = remember { MutableInteractionSource() }
                 Button(
                     onClick = { onSetAmbientMode(false, 0, false) },
-                    modifier = Modifier.weight(1f),
+                    interactionSource = offInteraction,
+                    modifier = Modifier.weight(1f).bounceClick(offInteraction),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isOff) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         contentColor = if (isOff) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
