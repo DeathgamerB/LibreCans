@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import org.librecans.protocol.EqPreset
 import android.Manifest
 import android.content.pm.PackageManager
@@ -51,6 +52,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
     private var isBound = false
     private var connectionService: BluetoothConnectionService? = null
     private var isServiceInitialized = false
+    private var repoCollectorJob: Job? = null
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -60,7 +62,8 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
             Log.d(TAG, "Service bound successfully")
 
             connectionService?.let { s ->
-                viewModelScope.launch {
+                repoCollectorJob?.cancel()
+                repoCollectorJob = viewModelScope.launch {
                     s.repository.deviceState.collect { state ->
                         _connectionState.value = state
                     }
@@ -74,6 +77,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
         override fun onServiceDisconnected(name: ComponentName?) {
             isBound = false
             connectionService = null
+            repoCollectorJob?.cancel()
             Log.d(TAG, "Service unbound")
         }
     }

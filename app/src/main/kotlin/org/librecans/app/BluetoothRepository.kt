@@ -44,6 +44,8 @@ class BluetoothRepository(private val context: Context) {
     private var seqNumber: Byte = 0
     private var ioJob: Job? = null
     private var pollJob: Job? = null
+    private var ambientDebounceJob: Job? = null
+    private var eqDebounceJob: Job? = null
     private val scope = CoroutineScope(DispatchScope + SupervisorJob())
 
     // Cache of successful protocol versions per MAC address
@@ -476,13 +478,13 @@ class BluetoothRepository(private val context: Context) {
 
             // Read core properties (Battery, EQ, DSEE)
             try {
-                // Try single battery first
-                sendCommandAndReadResponse(byteArrayOf(V2Command.BATTERY_GET, 0x00), V2Command.BATTERY_RET, 0x00.toByte())
+                // Try TWS dual battery first
+                sendCommandAndReadResponse(byteArrayOf(V2Command.BATTERY_GET, 0x09), V2Command.BATTERY_RET, 0x09.toByte())
+                sendCommandAndReadResponse(byteArrayOf(V2Command.BATTERY_GET, 0x0a), V2Command.BATTERY_RET, 0x0a.toByte())
             } catch (e: Exception) {
-                // Fallback to TWS battery
+                // Fallback to single battery
                 try {
-                    sendCommandAndReadResponse(byteArrayOf(V2Command.BATTERY_GET, 0x09), V2Command.BATTERY_RET, 0x09.toByte())
-                    sendCommandAndReadResponse(byteArrayOf(V2Command.BATTERY_GET, 0x0a), V2Command.BATTERY_RET, 0x0a.toByte())
+                    sendCommandAndReadResponse(byteArrayOf(V2Command.BATTERY_GET, 0x00), V2Command.BATTERY_RET, 0x00.toByte())
                 } catch (e2: Exception) {
                     Log.w(TAG, "Failed battery query: ${e2.message}")
                 }
@@ -766,50 +768,53 @@ class BluetoothRepository(private val context: Context) {
     // --- Control API methods ---
 
     fun setAmbientMode(controlOn: Boolean, level: Int, focusVoice: Boolean) {
-        val state = _deviceState.value
-        val usedLevel = if (level > 0) level else 1
+        ambientDebounceJob?.cancel()
+        ambientDebounceJob = scope.launch {
+            delay(150)
+            val state = _deviceState.value
+            val usedLevel = if (level > 0) level else 1
 
-        if (controlOn && level > 0) {
-            val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit()
-                .putInt(KEY_ASM_LEVEL, level)
-                .putBoolean(KEY_FOCUS_ON_VOICE, focusVoice)
-                .apply()
-        }
+            if (controlOn && level > 0) {
+                val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putInt(KEY_ASM_LEVEL, level)
+                    .putBoolean(KEY_FOCUS_ON_VOICE, focusVoice)
+                    .apply()
+            }
 
-        val cmd = if (state.protocolVersion == SonyProtocolVersion.V2 || isMockMode) {
-            CommandSerializer.serializeNcAndAsmSettingV2(
-                if (controlOn) NcAsmEffect.ON else NcAsmEffect.OFF,
-                if (level > 0) NcAsmSettingTypeV2.AMBIENT_SOUND else NcAsmSettingTypeV2.NOISE_CANCELLING,
-                if (focusVoice) AsmId.VOICE else AsmId.NORMAL,
-                usedLevel.toByte()
-            )
-        } else {
-            // V1 Protocol
-            CommandSerializer.serializeNcAndAsmSetting(
-                if (controlOn) NcAsmEffect.ADJUSTMENT_COMPLETION else NcAsmEffect.OFF,
-                NcAsmSettingType.LEVEL_ADJUSTMENT,
-                AsmSettingType.LEVEL_ADJUSTMENT,
-                if (focusVoice) AsmId.VOICE else AsmId.NORMAL,
-                (if (controlOn) level else -1).toByte()
-            )
-        }
-
-        updateStateOptimistically(
-            update = { current ->
-                current.copy(
-                    ambientSoundControl = controlOn,
-                    asmLevel = if (controlOn) level else 0,
-                    focusOnVoice = focusVoice
+            val cmd = if (state.protocolVersion == SonyProtocolVersion.V2 || isMockMode) {
+                CommandSerializer.serializeNcAndAsmSettingV2(
+                    if (controlOn) NcAsmEffect.ON else NcAsmEffect.OFF,
+                    if (level > 0) NcAsmSettingTypeV2.AMBIENT_SOUND else NcAsmSettingTypeV2.NOISE_CANCELLING,
+                    if (focusVoice) AsmId.VOICE else AsmId.NORMAL,
+                    usedLevel.toByte()
                 )
-            },
-            bytes = cmd
-        )
+            } else {
+                // V1 Protocol
+                CommandSerializer.serializeNcAndAsmSetting(
+                    if (controlOn) NcAsmEffect.ADJUSTMENT_COMPLETION else NcAsmEffect.OFF,
+                    NcAsmSettingType.LEVEL_ADJUSTMENT,
+                    AsmSettingType.LEVEL_ADJUSTMENT,
+                    if (focusVoice) AsmId.VOICE else AsmId.NORMAL,
+                    (if (controlOn) level else -1).toByte()
+                )
+            }
+
+            updateStateOptimistically(
+                update = { current ->
+                    current.copy(
+                        ambientSoundControl = controlOn,
+                        asmLevel = if (controlOn) level else 0,
+                        focusOnVoice = focusVoice
+                    )
+                },
+                bytes = cmd
+            )
+        }
     }
 
     fun setEqualizerPreset(preset: EqPreset) {
         val isManual = preset == EqPreset.MANUAL ||
-                       preset == EqPreset.MANUAL_V2 ||
                        preset == EqPreset.CUSTOM_1 ||
                        preset == EqPreset.CUSTOM_2
 
@@ -818,7 +823,7 @@ class BluetoothRepository(private val context: Context) {
             out.write(V2Command.EQ_SET.toInt())
             out.write(0x00)
 
-            val targetPreset = if (preset == EqPreset.MANUAL) EqPreset.MANUAL_V2 else preset
+            val targetPreset = preset
             out.write(targetPreset.value.toInt())
             out.write(0x06)
 
@@ -857,47 +862,51 @@ class BluetoothRepository(private val context: Context) {
     }
 
     fun setEqualizerCustom(clearBass: Int, bands: List<Int>) {
-        val out = java.io.ByteArrayOutputStream()
-        out.write(V2Command.EQ_SET.toInt())
-        out.write(0x00)
+        eqDebounceJob?.cancel()
+        eqDebounceJob = scope.launch {
+            delay(150)
+            val out = java.io.ByteArrayOutputStream()
+            out.write(V2Command.EQ_SET.toInt())
+            out.write(0x00)
 
-        val currentPreset = _deviceState.value.eqPreset
-        val presetToSend = if (currentPreset == EqPreset.CUSTOM_1 || currentPreset == EqPreset.CUSTOM_2) {
-            currentPreset
-        } else {
-            EqPreset.MANUAL_V2
+            val currentPreset = _deviceState.value.eqPreset
+            val presetToSend = if (currentPreset == EqPreset.CUSTOM_1 || currentPreset == EqPreset.CUSTOM_2) {
+                currentPreset
+            } else {
+                EqPreset.MANUAL
+            }
+
+            out.write(presetToSend.value.toInt())
+            out.write(0x06)
+
+            // Clear Bass: range -10..10, offset 10 (bytes 0..20)
+            val clearBassByte = (clearBass.coerceIn(-10, 10) + 10).toByte()
+            out.write(clearBassByte.toInt())
+
+            // 5 bands: range -10..10, offset 10 (bytes 0..20)
+            for (i in 0 until 5) {
+                val bVal = if (i < bands.size) bands[i] else 0
+                val bandByte = (bVal.coerceIn(-10, 10) + 10).toByte()
+                out.write(bandByte.toInt())
+            }
+
+            val packedBytes = out.toByteArray()
+            val payloadHex = packedBytes.joinToString("") { String.format("%02X ", it) }
+            Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
+
+            val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
+
+            updateStateOptimistically(
+                update = { current ->
+                    current.copy(
+                        eqPreset = if (currentPreset == EqPreset.CUSTOM_1 || currentPreset == EqPreset.CUSTOM_2) currentPreset else EqPreset.MANUAL,
+                        eqClearBass = clearBass.coerceIn(-10, 10),
+                        eqBands = targetBands
+                    )
+                },
+                bytes = packedBytes
+            )
         }
-
-        out.write(presetToSend.value.toInt())
-        out.write(0x06)
-
-        // Clear Bass: range -10..10, offset 10 (bytes 0..20)
-        val clearBassByte = (clearBass.coerceIn(-10, 10) + 10).toByte()
-        out.write(clearBassByte.toInt())
-
-        // 5 bands: range -10..10, offset 10 (bytes 0..20)
-        for (i in 0 until 5) {
-            val bVal = if (i < bands.size) bands[i] else 0
-            val bandByte = (bVal.coerceIn(-10, 10) + 10).toByte()
-            out.write(bandByte.toInt())
-        }
-
-        val packedBytes = out.toByteArray()
-        val payloadHex = packedBytes.joinToString("") { String.format("%02X ", it) }
-        Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
-
-        val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
-
-        updateStateOptimistically(
-            update = { current ->
-                current.copy(
-                    eqPreset = if (currentPreset == EqPreset.CUSTOM_1 || currentPreset == EqPreset.CUSTOM_2) currentPreset else EqPreset.MANUAL,
-                    eqClearBass = clearBass.coerceIn(-10, 10),
-                    eqBands = targetBands
-                )
-            },
-            bytes = packedBytes
-        )
     }
 
     fun setDsee(enabled: Boolean) {
@@ -990,6 +999,8 @@ class BluetoothRepository(private val context: Context) {
         isConnected = false
         pollJob?.cancel()
         ioJob?.cancel()
+        ambientDebounceJob?.cancel()
+        eqDebounceJob?.cancel()
         DebugLogger.log(context, "BluetoothRepository", "Explicit disconnect() requested.")
         try {
             socket?.close()

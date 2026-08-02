@@ -1,6 +1,7 @@
 package org.librecans.app
 
 import android.content.Context
+import org.librecans.app.BuildConfig
 import android.util.Log
 import java.io.File
 import java.io.FileOutputStream
@@ -35,7 +36,7 @@ object DebugLogger {
 
     @Synchronized
     fun log(context: Context, tag: String, message: String) {
-        if (!isDebugMode) return
+        if (!BuildConfig.DEBUG || !isDebugMode) return
 
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
         val formattedEntry = "[$timestamp] [$tag] $message"
@@ -64,6 +65,7 @@ object DebugLogger {
 
     @Synchronized
     fun getLogs(context: Context): List<String> {
+        if (!BuildConfig.DEBUG) return emptyList()
         val logFile = File(context.filesDir, LOG_FILE_NAME)
         if (logFile.exists()) {
             try {
@@ -77,6 +79,7 @@ object DebugLogger {
 
     @Synchronized
     fun clearLogs(context: Context) {
+        if (!BuildConfig.DEBUG) return
         logBuffer.clear()
         val logFile = File(context.filesDir, LOG_FILE_NAME)
         if (logFile.exists()) {

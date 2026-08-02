@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.activity.compose.BackHandler
 
 enum class AppScreen {
     PAIRING,
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         AppScreen.ABOUT -> {
+                            BackHandler { currentScreen = AppScreen.DASHBOARD }
                             AboutScreen(
                                 onNavigateToDebugLogs = {
                                     currentScreen = AppScreen.DEBUG_LOG
@@ -62,6 +64,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         AppScreen.DEBUG_LOG -> {
+                            BackHandler { currentScreen = AppScreen.ABOUT }
                             DebugLogScreen(
                                 onBack = {
                                     currentScreen = AppScreen.ABOUT
