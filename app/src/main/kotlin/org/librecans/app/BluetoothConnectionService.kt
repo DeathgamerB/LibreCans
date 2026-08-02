@@ -12,6 +12,9 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +30,7 @@ class BluetoothConnectionService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val binder = LocalBinder()
+    private var isForeground = false
 
     // Shared single instance of BluetoothRepository
     lateinit var repository: BluetoothRepository
@@ -42,6 +46,14 @@ class BluetoothConnectionService : Service() {
         fun getService(): BluetoothConnectionService = this@BluetoothConnectionService
     }
 
+    private fun hasBluetoothConnectPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         activeInstance = this
@@ -49,7 +61,11 @@ class BluetoothConnectionService : Service() {
         repository = BluetoothRepository(applicationContext)
 
         createNotificationChannel()
-        startForegroundWithNotification("Disconnected")
+        if (hasBluetoothConnectPermission()) {
+            startForegroundWithNotification("Disconnected")
+        } else {
+            Log.d(TAG, "Bluetooth permission not granted yet. Deferring startForeground.")
+        }
 
         // Observe repository state to update the persistent notification dynamically!
         repository.deviceState
@@ -75,6 +91,17 @@ class BluetoothConnectionService : Service() {
             stopSelf()
         } else if (macAddress != null) {
             repository.connect(macAddress)
+        }
+
+        if (hasBluetoothConnectPermission() && !isForeground) {
+            val state = if (::repository.isInitialized) repository.deviceState.value else null
+            val statusText = when {
+                state?.connected == true -> "Connected to ${state.deviceName}"
+                state?.connecting == true -> "Connecting to headset..."
+                state?.errorMessage != null -> "Error: ${state.errorMessage}"
+                else -> "Disconnected"
+            }
+            startForegroundWithNotification(statusText)
         }
 
         return START_STICKY
@@ -107,20 +134,31 @@ class BluetoothConnectionService : Service() {
 
     private fun startForegroundWithNotification(contentText: String) {
         val notification = buildNotification(contentText)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            isForeground = true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start foreground service: ${e.message}", e)
         }
     }
 
     private fun updateNotification(contentText: String) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, buildNotification(contentText))
+        if (!isForeground && hasBluetoothConnectPermission()) {
+            startForegroundWithNotification(contentText)
+        } else if (isForeground) {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(NOTIFICATION_ID, buildNotification(contentText))
+        } else {
+            Log.d(TAG, "Cannot update notification: Not in foreground and no Bluetooth permission yet.")
+        }
     }
 
     private fun buildNotification(contentText: String): Notification {
