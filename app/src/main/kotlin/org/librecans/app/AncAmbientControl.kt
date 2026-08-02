@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun AncAmbientControl(
     state: BluetoothDeviceState,
-    onSetAmbientMode: (controlOn: Boolean, level: Int, focusVoice: Boolean) -> Unit
+    onSetAmbientMode: (controlOn: Boolean, level: Int, focusVoice: Boolean, sendWrite: Boolean) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
     Card(
@@ -51,7 +51,7 @@ fun AncAmbientControl(
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onSetAmbientMode(true, 0, false)
+                        onSetAmbientMode(true, 0, false, true)
                     },
                     interactionSource = ncInteraction,
                     modifier = Modifier.weight(1f).bounceClick(ncInteraction),
@@ -71,7 +71,7 @@ fun AncAmbientControl(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         val targetLevel = if (state.asmLevel > 0) state.asmLevel else 20
                         val targetFocus = if (targetLevel < 3) false else state.focusOnVoice
-                        onSetAmbientMode(true, targetLevel, targetFocus)
+                        onSetAmbientMode(true, targetLevel, targetFocus, true)
                     },
                     interactionSource = ambientInteraction,
                     modifier = Modifier.weight(1.3f).bounceClick(ambientInteraction),
@@ -89,7 +89,7 @@ fun AncAmbientControl(
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onSetAmbientMode(false, 0, false)
+                        onSetAmbientMode(false, 0, false, true)
                     },
                     interactionSource = offInteraction,
                     modifier = Modifier.weight(1f).bounceClick(offInteraction),
@@ -116,6 +116,7 @@ fun AncAmbientControl(
                         .fillMaxWidth()
                         .padding(top = 20.dp)
                 ) {
+                    var sliderValue by remember(state.asmLevel) { mutableStateOf(state.asmLevel.toFloat()) }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -127,7 +128,7 @@ fun AncAmbientControl(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "${state.asmLevel}",
+                            text = "${kotlin.math.round(sliderValue).toInt()}",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Black
@@ -135,15 +136,21 @@ fun AncAmbientControl(
                     }
 
                     Slider(
-                        value = state.asmLevel.toFloat(),
+                        value = sliderValue,
                         onValueChange = { level ->
-                            val intLevel = level.toInt()
-                            if (intLevel != state.asmLevel) {
+                            val intLevel = kotlin.math.round(level).toInt()
+                            if (intLevel != kotlin.math.round(sliderValue).toInt()) {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             }
-                            // Only allow focus voice to remain enabled if level >= 3
+                            sliderValue = level
                             val targetFocus = if (intLevel < 3) false else state.focusOnVoice
-                            onSetAmbientMode(true, intLevel, targetFocus)
+                            // Update local state optimistic without network
+                            onSetAmbientMode(true, intLevel, targetFocus, false)
+                        },
+                        onValueChangeFinished = {
+                            val intLevel = kotlin.math.round(sliderValue).toInt()
+                            val targetFocus = if (intLevel < 3) false else state.focusOnVoice
+                            onSetAmbientMode(true, intLevel, targetFocus, true)
                         },
                         valueRange = 1f..20f,
                         steps = 18,
@@ -183,10 +190,13 @@ fun AncAmbientControl(
                                     checked = state.focusOnVoice,
                                     onCheckedChange = { checked ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onSetAmbientMode(true, state.asmLevel, checked)
+                                        onSetAmbientMode(true, state.asmLevel, checked, true)
                                     },
                                     colors = SwitchDefaults.colors(
-                                        checkedThumbColor = MaterialTheme.colorScheme.primary
+                                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                                     )
                                 )
                             }

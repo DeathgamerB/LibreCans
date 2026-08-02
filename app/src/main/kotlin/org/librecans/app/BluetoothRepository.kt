@@ -642,13 +642,14 @@ class BluetoothRepository(private val context: Context) {
 
     private fun updateStateOptimistically(
         update: (BluetoothDeviceState) -> BluetoothDeviceState,
-        bytes: ByteArray
+        bytes: ByteArray,
+        sendWrite: Boolean = true
     ) {
         val prevState = _deviceState.value
         _deviceState.value = update(prevState)
 
         if (isMockMode) {
-            simulateMockChange(bytes)
+            if (sendWrite) simulateMockChange(bytes)
             return
         }
 
@@ -656,6 +657,8 @@ class BluetoothRepository(private val context: Context) {
             _deviceState.value = prevState
             return
         }
+
+        if (!sendWrite) return
 
         scope.launch(Dispatchers.IO) {
             try {
@@ -767,7 +770,7 @@ class BluetoothRepository(private val context: Context) {
 
     // --- Control API methods ---
 
-    fun setAmbientMode(controlOn: Boolean, level: Int, focusVoice: Boolean) {
+    fun setAmbientMode(controlOn: Boolean, level: Int, focusVoice: Boolean, sendWrite: Boolean = true) {
         ambientDebounceJob?.cancel()
         ambientDebounceJob = scope.launch {
             delay(150)
@@ -861,7 +864,7 @@ class BluetoothRepository(private val context: Context) {
         }
     }
 
-    fun setEqualizerCustom(clearBass: Int, bands: List<Int>) {
+    fun setEqualizerCustom(clearBass: Int, bands: List<Int>, sendWrite: Boolean = true) {
         eqDebounceJob?.cancel()
         eqDebounceJob = scope.launch {
             delay(150)

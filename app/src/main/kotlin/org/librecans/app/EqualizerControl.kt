@@ -18,6 +18,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlin.math.roundToInt
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,7 +28,7 @@ import org.librecans.protocol.EqPreset
 fun EqualizerControl(
     state: BluetoothDeviceState,
     onSetPreset: (EqPreset) -> Unit,
-    onSetCustomEq: (clearBass: Int, bands: List<Int>) -> Unit
+    onSetCustomEq: (clearBass: Int, bands: List<Int>, sendWrite: Boolean) -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -153,6 +154,7 @@ fun EqualizerControl(
                     for (i in 0 until 5) {
                         val label = bandLabels[i]
                         val bandValue = state.eqBands.getOrElse(i) { 0 }
+                        var sliderValue by remember(bandValue) { mutableStateOf(bandValue.toFloat()) }
 
                         Row(
                             modifier = Modifier
@@ -167,24 +169,31 @@ fun EqualizerControl(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Slider(
-                                value = bandValue.toFloat(),
+                                value = sliderValue,
                                 onValueChange = { newValue ->
-                                    val intValue = newValue.toInt().coerceIn(-10, 10)
-                                    if (intValue != bandValue) {
+                                    val intValue = newValue.roundToInt().coerceIn(-10, 10)
+                                    if (intValue != sliderValue.roundToInt()) {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     }
-                                    Log.d("EqualizerControl", "Manual EQ Slider change: band $i ($label) value = $intValue")
+                                    sliderValue = newValue
                                     val newBands = state.eqBands.toMutableList()
                                     while (newBands.size < 5) newBands.add(0)
                                     newBands[i] = intValue
-                                    onSetCustomEq(state.eqClearBass, newBands)
+                                    onSetCustomEq(state.eqClearBass, newBands, false)
+                                },
+                                onValueChangeFinished = {
+                                    val intValue = sliderValue.roundToInt().coerceIn(-10, 10)
+                                    val newBands = state.eqBands.toMutableList()
+                                    while (newBands.size < 5) newBands.add(0)
+                                    newBands[i] = intValue
+                                    onSetCustomEq(state.eqClearBass, newBands, true)
                                 },
                                 valueRange = -10f..10f,
                                 steps = 19,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = (if (bandValue > 0) "+" else "") + bandValue.toString(),
+                                text = (if (sliderValue.roundToInt() > 0) "+" else "") + sliderValue.roundToInt().toString(),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.width(32.dp),
@@ -196,6 +205,7 @@ fun EqualizerControl(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Clear Bass Slider
+                    var cbSliderValue by remember(state.eqClearBass) { mutableStateOf(state.eqClearBass.toFloat()) }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -210,20 +220,24 @@ fun EqualizerControl(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Slider(
-                            value = state.eqClearBass.toFloat(),
+                            value = cbSliderValue,
                             onValueChange = { newValue ->
-                                val intValue = newValue.toInt()
-                                if (intValue != state.eqClearBass) {
+                                val intValue = newValue.roundToInt()
+                                if (intValue != cbSliderValue.roundToInt()) {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 }
-                                onSetCustomEq(intValue, state.eqBands)
+                                cbSliderValue = newValue
+                                onSetCustomEq(intValue, state.eqBands, false)
+                            },
+                            onValueChangeFinished = {
+                                onSetCustomEq(cbSliderValue.roundToInt(), state.eqBands, true)
                             },
                             valueRange = -10f..10f,
                             steps = 19,
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = (if (state.eqClearBass > 0) "+" else "") + state.eqClearBass.toString(),
+                            text = (if (cbSliderValue.roundToInt() > 0) "+" else "") + cbSliderValue.roundToInt().toString(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.width(32.dp),
