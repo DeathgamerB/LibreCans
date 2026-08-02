@@ -17,9 +17,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -307,26 +310,22 @@ fun DeviceHeroCard(state: BluetoothDeviceState) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Premium Generic Headphone Artwork
-                Box(
+                val isTWS = state.deviceName.startsWith("WF-", ignoreCase = true) || state.deviceName.contains("LinkBuds", ignoreCase = true)
+                Image(
+                    painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
+                    contentDescription = if (isTWS) "Earbuds" else "Headphones",
                     modifier = Modifier
-                        .size(140.dp)
-                        .clip(RoundedCornerShape(70.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val isTWS = state.deviceName.startsWith("WF-", ignoreCase = true) || state.deviceName.contains("LinkBuds", ignoreCase = true)
-                    Text(
-                        text = if (isTWS) "🦻" else "🎧",
-                        fontSize = 72.sp
-                    )
-                }
+                        .fillMaxWidth(0.8f)
+                        .aspectRatio(1f),
+                    contentScale = ContentScale.Fit
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Model name & mac
                 Text(
                     text = state.deviceName,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black
                 )
                 Text(
