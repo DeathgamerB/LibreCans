@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,8 +22,22 @@ import java.util.concurrent.ConcurrentHashMap
 class BluetoothRepository(private val context: Context) {
     private val TAG = "BluetoothRepository"
 
+    private val AMBIENT_PREFS_NAME = "librecans_ambient_prefs"
+    private val KEY_ASM_LEVEL = "ambient_sound_level"
+    private val KEY_FOCUS_ON_VOICE = "focus_on_voice"
+
     private val _deviceState = MutableStateFlow(BluetoothDeviceState())
     val deviceState: StateFlow<BluetoothDeviceState> = _deviceState.asStateFlow()
+
+    init {
+        val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+        val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
+        val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
+        _deviceState.value = BluetoothDeviceState(
+            asmLevel = storedLevel,
+            focusOnVoice = storedFocus
+        )
+    }
 
     private var socket: BluetoothSocket? = null
     private var isConnected = false
@@ -59,7 +74,7 @@ class BluetoothRepository(private val context: Context) {
                 deviceMac = "00:11:22:33:44:55",
                 protocolVersion = SonyProtocolVersion.V2,
                 ambientSoundControl = true,
-                asmLevel = 10,
+                asmLevel = 20,
                 focusOnVoice = false,
                 focusOnVoiceAvailable = true,
                 batteryLevel = 85,
@@ -98,7 +113,16 @@ class BluetoothRepository(private val context: Context) {
         if (isMockMode) return
         disconnect()
 
-        _deviceState.value = BluetoothDeviceState(connecting = true, deviceMac = macAddress)
+        val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+        val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
+        val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
+
+        _deviceState.value = BluetoothDeviceState(
+            connecting = true,
+            deviceMac = macAddress,
+            asmLevel = storedLevel,
+            focusOnVoice = storedFocus
+        )
 
         scope.launch {
             val adapter = BluetoothAdapter.getDefaultAdapter()
@@ -744,6 +768,15 @@ class BluetoothRepository(private val context: Context) {
     fun setAmbientMode(controlOn: Boolean, level: Int, focusVoice: Boolean) {
         val state = _deviceState.value
         val usedLevel = if (level > 0) level else 1
+
+        if (controlOn && level > 0) {
+            val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit()
+                .putInt(KEY_ASM_LEVEL, level)
+                .putBoolean(KEY_FOCUS_ON_VOICE, focusVoice)
+                .apply()
+        }
+
         val cmd = if (state.protocolVersion == SonyProtocolVersion.V2 || isMockMode) {
             CommandSerializer.serializeNcAndAsmSettingV2(
                 if (controlOn) NcAsmEffect.ON else NcAsmEffect.OFF,
@@ -775,19 +808,52 @@ class BluetoothRepository(private val context: Context) {
     }
 
     fun setEqualizerPreset(preset: EqPreset) {
-        val targetPreset = if (preset == EqPreset.MANUAL) EqPreset.MANUAL_V2 else preset
-        val bytes = byteArrayOf(
-            V2Command.EQ_SET,
-            0x00.toByte(),
-            targetPreset.value,
-            0x00.toByte()
-        )
-        updateStateOptimistically(
-            update = { current ->
-                current.copy(eqPreset = preset)
-            },
-            bytes = bytes
-        )
+        val isManual = preset == EqPreset.MANUAL ||
+                       preset == EqPreset.MANUAL_V2 ||
+                       preset == EqPreset.CUSTOM_1 ||
+                       preset == EqPreset.CUSTOM_2
+
+        if (isManual) {
+            val out = java.io.ByteArrayOutputStream()
+            out.write(V2Command.EQ_SET.toInt())
+            out.write(0x00)
+
+            val targetPreset = if (preset == EqPreset.MANUAL) EqPreset.MANUAL_V2 else preset
+            out.write(targetPreset.value.toInt())
+            out.write(0x06)
+
+            // Clear Bass: range -10..10, offset 10 (bytes 0..20)
+            val clearBassByte = (_deviceState.value.eqClearBass.coerceIn(-10, 10) + 10).toByte()
+            out.write(clearBassByte.toInt())
+
+            // 5 bands: range -10..10, offset 10 (bytes 0..20)
+            for (i in 0 until 5) {
+                val bVal = if (i < _deviceState.value.eqBands.size) _deviceState.value.eqBands[i] else 0
+                val bandByte = (bVal.coerceIn(-10, 10) + 10).toByte()
+                out.write(bandByte.toInt())
+            }
+
+            val packedBytes = out.toByteArray()
+            updateStateOptimistically(
+                update = { current ->
+                    current.copy(eqPreset = preset)
+                },
+                bytes = packedBytes
+            )
+        } else {
+            val bytes = byteArrayOf(
+                V2Command.EQ_SET,
+                0x00.toByte(),
+                preset.value,
+                0x00.toByte()
+            )
+            updateStateOptimistically(
+                update = { current ->
+                    current.copy(eqPreset = preset)
+                },
+                bytes = bytes
+            )
+        }
     }
 
     fun setEqualizerCustom(clearBass: Int, bands: List<Int>) {
