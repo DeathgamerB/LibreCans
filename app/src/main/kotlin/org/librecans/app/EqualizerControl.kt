@@ -1,15 +1,21 @@
 package org.librecans.app
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +29,9 @@ fun EqualizerControl(
     onSetPreset: (EqPreset) -> Unit,
     onSetCustomEq: (clearBass: Int, bands: List<Int>) -> Unit
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+
     val presets = listOf(
         Pair("Off", EqPreset.OFF),
         Pair("Bright", EqPreset.BRIGHT),
@@ -46,38 +55,73 @@ fun EqualizerControl(
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
-            Text(
-                text = "Equalizer",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Presets grid (Material 3 Expressive chip design)
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(130.dp)
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Equalizer",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = if (isExpanded) "▲" else "▼",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)),
+                exit = shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow))
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+            // Horizontally scrollable row of presets (Material 3 Expressive)
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = 4.dp)
             ) {
                 items(presets) { (label, preset) ->
-                    val isSelected = state.eqPreset == preset
+                    val isSelected = if (preset == EqPreset.MANUAL) {
+                        state.eqPreset == EqPreset.MANUAL ||
+                        state.eqPreset == EqPreset.MANUAL_V2 ||
+                        state.eqPreset == EqPreset.CUSTOM_1 ||
+                        state.eqPreset == EqPreset.CUSTOM_2
+                    } else {
+                        state.eqPreset == preset
+                    }
+                    val chipInteractionSource = remember { MutableInteractionSource() }
+                    val chipShape = if (isSelected) {
+                        RoundedCornerShape(topStart = 8.dp, topEnd = 16.dp, bottomEnd = 8.dp, bottomStart = 12.dp)
+                    } else {
+                        RoundedCornerShape(8.dp)
+                    }
                     FilterChip(
                         selected = isSelected,
-                        onClick = { onSetPreset(preset) },
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onSetPreset(preset)
+                        },
+                        interactionSource = chipInteractionSource,
+                        modifier = Modifier.bounceClick(chipInteractionSource),
                         label = {
                             Text(
                                 text = label,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.fillMaxWidth(),
                                 maxLines = 1
                             )
                         },
-                        shape = RoundedCornerShape(10.dp),
+                        shape = chipShape,
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
@@ -88,8 +132,11 @@ fun EqualizerControl(
                 }
             }
 
-            // Manual band sliders (only shown when MANUAL (0xA0) is selected)
-            val showSliders = state.eqPreset == EqPreset.MANUAL
+            // Manual band sliders (shown when MANUAL or V2 custom presets are selected)
+            val showSliders = state.eqPreset == EqPreset.MANUAL ||
+                              state.eqPreset == EqPreset.MANUAL_V2 ||
+                              state.eqPreset == EqPreset.CUSTOM_1 ||
+                              state.eqPreset == EqPreset.CUSTOM_2
             AnimatedVisibility(
                 visible = showSliders,
                 enter = expandVertically(),
@@ -122,9 +169,14 @@ fun EqualizerControl(
                             Slider(
                                 value = bandValue.toFloat(),
                                 onValueChange = { newValue ->
+                                    val intValue = newValue.toInt().coerceIn(-10, 10)
+                                    if (intValue != bandValue) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                    Log.d("EqualizerControl", "Manual EQ Slider change: band $i ($label) value = $intValue")
                                     val newBands = state.eqBands.toMutableList()
                                     while (newBands.size < 5) newBands.add(0)
-                                    newBands[i] = newValue.toInt()
+                                    newBands[i] = intValue
                                     onSetCustomEq(state.eqClearBass, newBands)
                                 },
                                 valueRange = -10f..10f,
@@ -160,7 +212,11 @@ fun EqualizerControl(
                         Slider(
                             value = state.eqClearBass.toFloat(),
                             onValueChange = { newValue ->
-                                onSetCustomEq(newValue.toInt(), state.eqBands)
+                                val intValue = newValue.toInt()
+                                if (intValue != state.eqClearBass) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                }
+                                onSetCustomEq(intValue, state.eqBands)
                             },
                             valueRange = -10f..10f,
                             steps = 19,
@@ -174,6 +230,8 @@ fun EqualizerControl(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
+                }
+            }
                 }
             }
         }

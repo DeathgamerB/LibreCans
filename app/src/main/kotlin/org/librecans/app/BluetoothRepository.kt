@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,8 +22,22 @@ import java.util.concurrent.ConcurrentHashMap
 class BluetoothRepository(private val context: Context) {
     private val TAG = "BluetoothRepository"
 
+    private val AMBIENT_PREFS_NAME = "librecans_ambient_prefs"
+    private val KEY_ASM_LEVEL = "ambient_sound_level"
+    private val KEY_FOCUS_ON_VOICE = "focus_on_voice"
+
     private val _deviceState = MutableStateFlow(BluetoothDeviceState())
     val deviceState: StateFlow<BluetoothDeviceState> = _deviceState.asStateFlow()
+
+    init {
+        val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+        val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
+        val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
+        _deviceState.value = BluetoothDeviceState(
+            asmLevel = storedLevel,
+            focusOnVoice = storedFocus
+        )
+    }
 
     private var socket: BluetoothSocket? = null
     private var isConnected = false
@@ -59,7 +74,7 @@ class BluetoothRepository(private val context: Context) {
                 deviceMac = "00:11:22:33:44:55",
                 protocolVersion = SonyProtocolVersion.V2,
                 ambientSoundControl = true,
-                asmLevel = 10,
+                asmLevel = 20,
                 focusOnVoice = false,
                 focusOnVoiceAvailable = true,
                 batteryLevel = 85,
@@ -98,7 +113,16 @@ class BluetoothRepository(private val context: Context) {
         if (isMockMode) return
         disconnect()
 
-        _deviceState.value = BluetoothDeviceState(connecting = true, deviceMac = macAddress)
+        val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+        val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
+        val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
+
+        _deviceState.value = BluetoothDeviceState(
+            connecting = true,
+            deviceMac = macAddress,
+            asmLevel = storedLevel,
+            focusOnVoice = storedFocus
+        )
 
         scope.launch {
             val adapter = BluetoothAdapter.getDefaultAdapter()
@@ -120,37 +144,51 @@ class BluetoothRepository(private val context: Context) {
 
             val name = device.name ?: "Sony Headset"
             Log.d(TAG, "Attempting to connect to device: $name ($macAddress)")
+            DebugLogger.log(context, "BluetoothRepository", "Attempting to connect to device: $name ($macAddress)")
 
             // Check protocol cache
             val cachedVersion = protocolCache[macAddress]
             var connectedSocket: BluetoothSocket? = null
             var usedVersion: SonyProtocolVersion? = null
 
-            if (cachedVersion != null) {
-                Log.d(TAG, "Trying cached protocol version: $cachedVersion")
-                val uuidStr = if (cachedVersion == SonyProtocolVersion.V2) Constants.SERVICE_UUID_V2 else Constants.SERVICE_UUID
-                connectedSocket = tryConnectSocket(device, uuidStr)
-                if (connectedSocket != null) {
-                    usedVersion = cachedVersion
-                }
-            }
+            val startTime = System.currentTimeMillis()
+            var attempt = 1
+            while (connectedSocket == null && (System.currentTimeMillis() - startTime) < 5000) {
+                Log.d(TAG, "Connection attempt $attempt...")
+                DebugLogger.log(context, "BluetoothRepository", "Connection attempt $attempt for $macAddress")
 
-            if (connectedSocket == null) {
-                Log.d(TAG, "No cache or cached connection failed. Trying V1 UUID...")
-                connectedSocket = tryConnectSocket(device, Constants.SERVICE_UUID)
-                if (connectedSocket != null) {
-                    usedVersion = SonyProtocolVersion.V1
-                } else {
-                    Log.d(TAG, "V1 UUID connection failed. Trying V2 UUID...")
-                    connectedSocket = tryConnectSocket(device, Constants.SERVICE_UUID_V2)
+                if (cachedVersion != null) {
+                    Log.d(TAG, "Trying cached protocol version: $cachedVersion")
+                    val uuidStr = if (cachedVersion == SonyProtocolVersion.V2) Constants.SERVICE_UUID_V2 else Constants.SERVICE_UUID
+                    connectedSocket = tryConnectSocket(device, uuidStr)
                     if (connectedSocket != null) {
-                        usedVersion = SonyProtocolVersion.V2
+                        usedVersion = cachedVersion
                     }
+                }
+
+                if (connectedSocket == null) {
+                    Log.d(TAG, "No cache or cached connection failed. Trying V1 UUID...")
+                    connectedSocket = tryConnectSocket(device, Constants.SERVICE_UUID)
+                    if (connectedSocket != null) {
+                        usedVersion = SonyProtocolVersion.V1
+                    } else {
+                        Log.d(TAG, "V1 UUID connection failed. Trying V2 UUID...")
+                        connectedSocket = tryConnectSocket(device, Constants.SERVICE_UUID_V2)
+                        if (connectedSocket != null) {
+                            usedVersion = SonyProtocolVersion.V2
+                        }
+                    }
+                }
+
+                if (connectedSocket == null) {
+                    attempt++
+                    delay(500) // Wait 500ms before retrying
                 }
             }
 
             if (connectedSocket != null && usedVersion != null) {
                 Log.d(TAG, "Successfully connected via protocol: $usedVersion")
+                DebugLogger.log(context, "BluetoothRepository", "Successfully connected via protocol: $usedVersion")
                 protocolCache[macAddress] = usedVersion
                 socket = connectedSocket
                 isConnected = true
@@ -177,6 +215,7 @@ class BluetoothRepository(private val context: Context) {
                 startPollingLoop(usedVersion)
 
             } else {
+                DebugLogger.log(context, "BluetoothRepository", "Failed to connect to headphones.")
                 updateError("Failed to connect to headphones. Ensure they are powered on and paired.")
             }
         }
@@ -185,12 +224,15 @@ class BluetoothRepository(private val context: Context) {
     private fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
         val uuid = UUID.fromString(uuidStr)
         var sock: BluetoothSocket? = null
+        DebugLogger.log(context, "BluetoothRepository", "tryConnectSocket to UUID $uuidStr")
         return try {
             sock = device.createRfcommSocketToServiceRecord(uuid)
             sock.connect()
+            DebugLogger.log(context, "BluetoothRepository", "RFCOMM socket connect successful to UUID $uuidStr")
             sock
         } catch (e: IOException) {
             Log.w(TAG, "Connection failed to UUID $uuidStr: ${e.message}")
+            DebugLogger.log(context, "BluetoothRepository", "Connection failed to UUID $uuidStr: ${e.message}")
             try {
                 sock?.close()
             } catch (closeEx: IOException) {
@@ -259,6 +301,8 @@ class BluetoothRepository(private val context: Context) {
             val sub = if (msg.payload.size > 1) msg.payload[1] else -1.toByte()
 
             Log.d(TAG, "Recv DATA_MDR: op=0x${String.format("%02X", op)}, sub=0x${String.format("%02X", sub)}")
+            val payloadHex = msg.payload.joinToString("") { String.format("%02X ", it) }
+            DebugLogger.log(context, "BluetoothRepository", "Received DATA_MDR: op=0x${String.format("%02X", op)} sub=0x${String.format("%02X", sub)} | payload hex: $payloadHex")
 
             // Complete any pending deferables
             val keySub = "0x${String.format("%02X", op)}_0x${String.format("%02X", sub)}"
@@ -456,6 +500,13 @@ class BluetoothRepository(private val context: Context) {
                 Log.w(TAG, "Failed DSEE query: ${e.message}")
             }
 
+            // Actively query current V2 ambient/NC state immediately upon successful connection
+            try {
+                sendCommandAndReadResponse(byteArrayOf(0x66, 0x17), 0x67)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed initial V2 ambient check: ${e.message}")
+            }
+
             // Probe capability-gated extras with timeouts
             probeCapabilities()
         } else {
@@ -572,6 +623,50 @@ class BluetoothRepository(private val context: Context) {
         }
     }
 
+    private suspend fun sendCommandSuspend(bytes: ByteArray) {
+        val outStream = socket?.outputStream ?: throw IOException("Socket is closed")
+        synchronized(ioMutex) {
+            val packed = CommandSerializer.packageDataForBt(bytes, DataType.DATA_MDR, seqNumber++)
+            val hexStr = packed.joinToString("") { String.format("%02X ", it) }
+            Log.d(TAG, "Writing packed frame to BluetoothSocket: size=${packed.size} bytes, frame hex=$hexStr")
+
+            val payloadHex = bytes.joinToString("") { String.format("%02X ", it) }
+            DebugLogger.log(context, "BluetoothRepository", "Writing command payload (size=${bytes.size} bytes) hex: $payloadHex | packed frame hex: $hexStr")
+
+            outStream.write(packed)
+            outStream.flush()
+        }
+    }
+
+    private fun updateStateOptimistically(
+        update: (BluetoothDeviceState) -> BluetoothDeviceState,
+        bytes: ByteArray
+    ) {
+        val prevState = _deviceState.value
+        _deviceState.value = update(prevState)
+
+        if (isMockMode) {
+            simulateMockChange(bytes)
+            return
+        }
+
+        if (socket == null || !isConnected) {
+            _deviceState.value = prevState
+            return
+        }
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                sendCommandSuspend(bytes)
+            } catch (e: Exception) {
+                Log.e(TAG, "Optimistic send failed, reverting state: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    _deviceState.value = prevState
+                }
+            }
+        }
+    }
+
     private suspend fun sendCommandAndReadResponse(
         bytes: ByteArray,
         retCommandId: Byte,
@@ -673,68 +768,150 @@ class BluetoothRepository(private val context: Context) {
     fun setAmbientMode(controlOn: Boolean, level: Int, focusVoice: Boolean) {
         val state = _deviceState.value
         val usedLevel = if (level > 0) level else 1
-        if (state.protocolVersion == SonyProtocolVersion.V2 || isMockMode) {
-            val cmd = CommandSerializer.serializeNcAndAsmSettingV2(
+
+        if (controlOn && level > 0) {
+            val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit()
+                .putInt(KEY_ASM_LEVEL, level)
+                .putBoolean(KEY_FOCUS_ON_VOICE, focusVoice)
+                .apply()
+        }
+
+        val cmd = if (state.protocolVersion == SonyProtocolVersion.V2 || isMockMode) {
+            CommandSerializer.serializeNcAndAsmSettingV2(
                 if (controlOn) NcAsmEffect.ON else NcAsmEffect.OFF,
                 if (level > 0) NcAsmSettingTypeV2.AMBIENT_SOUND else NcAsmSettingTypeV2.NOISE_CANCELLING,
                 if (focusVoice) AsmId.VOICE else AsmId.NORMAL,
                 usedLevel.toByte()
             )
-            sendCommand(cmd)
         } else {
             // V1 Protocol
-            val cmd = CommandSerializer.serializeNcAndAsmSetting(
+            CommandSerializer.serializeNcAndAsmSetting(
                 if (controlOn) NcAsmEffect.ADJUSTMENT_COMPLETION else NcAsmEffect.OFF,
                 NcAsmSettingType.LEVEL_ADJUSTMENT,
                 AsmSettingType.LEVEL_ADJUSTMENT,
                 if (focusVoice) AsmId.VOICE else AsmId.NORMAL,
                 (if (controlOn) level else -1).toByte()
             )
-            sendCommand(cmd)
         }
 
-        if (isMockMode) {
-            _deviceState.value = _deviceState.value.copy(
-                ambientSoundControl = controlOn,
-                asmLevel = if (controlOn) level else 0,
-                focusOnVoice = focusVoice
+        updateStateOptimistically(
+            update = { current ->
+                current.copy(
+                    ambientSoundControl = controlOn,
+                    asmLevel = if (controlOn) level else 0,
+                    focusOnVoice = focusVoice
+                )
+            },
+            bytes = cmd
+        )
+    }
+
+    fun setEqualizerPreset(preset: EqPreset) {
+        val isManual = preset == EqPreset.MANUAL ||
+                       preset == EqPreset.MANUAL_V2 ||
+                       preset == EqPreset.CUSTOM_1 ||
+                       preset == EqPreset.CUSTOM_2
+
+        if (isManual) {
+            val out = java.io.ByteArrayOutputStream()
+            out.write(V2Command.EQ_SET.toInt())
+            out.write(0x00)
+
+            val targetPreset = if (preset == EqPreset.MANUAL) EqPreset.MANUAL_V2 else preset
+            out.write(targetPreset.value.toInt())
+            out.write(0x06)
+
+            // Clear Bass: range -10..10, offset 10 (bytes 0..20)
+            val clearBassByte = (_deviceState.value.eqClearBass.coerceIn(-10, 10) + 10).toByte()
+            out.write(clearBassByte.toInt())
+
+            // 5 bands: range -10..10, offset 10 (bytes 0..20)
+            for (i in 0 until 5) {
+                val bVal = if (i < _deviceState.value.eqBands.size) _deviceState.value.eqBands[i] else 0
+                val bandByte = (bVal.coerceIn(-10, 10) + 10).toByte()
+                out.write(bandByte.toInt())
+            }
+
+            val packedBytes = out.toByteArray()
+            updateStateOptimistically(
+                update = { current ->
+                    current.copy(eqPreset = preset)
+                },
+                bytes = packedBytes
+            )
+        } else {
+            val bytes = byteArrayOf(
+                V2Command.EQ_SET,
+                0x00.toByte(),
+                preset.value,
+                0x00.toByte()
+            )
+            updateStateOptimistically(
+                update = { current ->
+                    current.copy(eqPreset = preset)
+                },
+                bytes = bytes
             )
         }
     }
 
-    fun setEqualizerPreset(preset: EqPreset) {
-        val bytes = byteArrayOf(
-            V2Command.EQ_SET,
-            0x00.toByte(),
-            preset.value,
-            0x00.toByte()
-        )
-        sendCommand(bytes)
-    }
-
     fun setEqualizerCustom(clearBass: Int, bands: List<Int>) {
-        val clamp = { v: Int ->
-            (v.coerceIn(-10, 10) + 10).toByte()
-        }
         val out = java.io.ByteArrayOutputStream()
         out.write(V2Command.EQ_SET.toInt())
         out.write(0x00)
-        out.write(EqPreset.MANUAL.value.toInt())
+
+        val currentPreset = _deviceState.value.eqPreset
+        val presetToSend = if (currentPreset == EqPreset.CUSTOM_1 || currentPreset == EqPreset.CUSTOM_2) {
+            currentPreset
+        } else {
+            EqPreset.MANUAL_V2
+        }
+
+        out.write(presetToSend.value.toInt())
         out.write(0x06)
-        out.write(clamp(clearBass).toInt())
+
+        // Clear Bass: range -10..10, offset 10 (bytes 0..20)
+        val clearBassByte = (clearBass.coerceIn(-10, 10) + 10).toByte()
+        out.write(clearBassByte.toInt())
+
+        // 5 bands: range -10..10, offset 10 (bytes 0..20)
         for (i in 0 until 5) {
             val bVal = if (i < bands.size) bands[i] else 0
-            out.write(clamp(bVal).toInt())
+            val bandByte = (bVal.coerceIn(-10, 10) + 10).toByte()
+            out.write(bandByte.toInt())
         }
-        sendCommand(out.toByteArray())
+
+        val packedBytes = out.toByteArray()
+        val payloadHex = packedBytes.joinToString("") { String.format("%02X ", it) }
+        Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
+
+        val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
+
+        updateStateOptimistically(
+            update = { current ->
+                current.copy(
+                    eqPreset = if (currentPreset == EqPreset.CUSTOM_1 || currentPreset == EqPreset.CUSTOM_2) currentPreset else EqPreset.MANUAL,
+                    eqClearBass = clearBass.coerceIn(-10, 10),
+                    eqBands = targetBands
+                )
+            },
+            bytes = packedBytes
+        )
     }
 
     fun setDsee(enabled: Boolean) {
-        sendCommand(byteArrayOf(
+        val bytes = byteArrayOf(
             V2Command.DSEE_SET,
             0x01.toByte(),
             if (enabled) 0x01.toByte() else 0x00.toByte()
-        ))
+        )
+        updateStateOptimistically(
+            update = { current ->
+                current.copy(dsee = enabled)
+            },
+            bytes = bytes
+        )
     }
 
     fun setAutoPowerOff(index: Int) {
@@ -748,31 +925,49 @@ class BluetoothRepository(private val context: Context) {
             Pair(0x10, 0x00)  // When taken off
         )
         val code = codes[index]
-        sendCommand(byteArrayOf(
+        val bytes = byteArrayOf(
             V2Command.APO_SET,
             0x05.toByte(),
             code.first.toByte(),
             code.second.toByte()
-        ))
+        )
+        updateStateOptimistically(
+            update = { current ->
+                current.copy(autoPowerOff = index)
+            },
+            bytes = bytes
+        )
     }
 
     fun setSpeakToChat(enabled: Boolean) {
         // SET f8 0c <enabled? 0:1> 01 (inverted bit on v2)
-        sendCommand(byteArrayOf(
+        val bytes = byteArrayOf(
             V2Command.BTNMODE_SET,
             V2Command.SUB_SPEAK_TO_CHAT,
             (if (enabled) 0x00 else 0x01).toByte(),
             0x01.toByte()
-        ))
+        )
+        updateStateOptimistically(
+            update = { current ->
+                current.copy(speakToChat = enabled)
+            },
+            bytes = bytes
+        )
     }
 
     fun setAdaptiveVolume(enabled: Boolean) {
         // SET f8 0a <enabled? 0:1> (inverted)
-        sendCommand(byteArrayOf(
+        val bytes = byteArrayOf(
             V2Command.BTNMODE_SET,
             V2Command.SUB_ADAPTIVE_VOLUME,
             (if (enabled) 0x00 else 0x01).toByte()
-        ))
+        )
+        updateStateOptimistically(
+            update = { current ->
+                current.copy(adaptiveVolume = enabled)
+            },
+            bytes = bytes
+        )
     }
 
     private fun updateError(msg: String) {
@@ -783,6 +978,7 @@ class BluetoothRepository(private val context: Context) {
         isConnected = false
         socket = null
         pollJob?.cancel()
+        DebugLogger.log(context, "BluetoothRepository", "Connection dropped / socket closed.")
         _deviceState.value = BluetoothDeviceState(errorMessage = "Headphones disconnected.")
     }
 
@@ -794,6 +990,7 @@ class BluetoothRepository(private val context: Context) {
         isConnected = false
         pollJob?.cancel()
         ioJob?.cancel()
+        DebugLogger.log(context, "BluetoothRepository", "Explicit disconnect() requested.")
         try {
             socket?.close()
         } catch (e: Exception) {

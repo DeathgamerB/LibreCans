@@ -56,6 +56,9 @@ object V2Command {
 
 enum class EqPreset(val value: Byte) {
     OFF(0x00.toByte()),
+    MANUAL_V2(0x01.toByte()),
+    CUSTOM_1(0x02.toByte()),
+    CUSTOM_2(0x03.toByte()),
     BRIGHT(0x10.toByte()),
     EXCITED(0x11.toByte()),
     MELLOW(0x12.toByte()),

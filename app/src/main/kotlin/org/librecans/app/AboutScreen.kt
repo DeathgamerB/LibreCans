@@ -6,9 +6,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -16,9 +17,12 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun AboutScreen(
+    onNavigateToDebugLogs: () -> Unit,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
+    var isDebugEnabled by remember { mutableStateOf(DebugLogger.isDebugMode) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -27,6 +31,7 @@ fun AboutScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .safeDrawingPadding()
                 .padding(24.dp)
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -125,6 +130,55 @@ fun AboutScreen(
                         fontSize = 13.sp,
                         lineHeight = 18.sp
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Debug Diagnostics card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Bluetooth Diagnostics",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Log connection and protocol events",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = isDebugEnabled,
+                            onCheckedChange = { checked ->
+                                DebugLogger.toggleDebugMode(context, checked)
+                                isDebugEnabled = checked
+                            }
+                        )
+                    }
+
+                    if (isDebugEnabled) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = onNavigateToDebugLogs,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("View Diagnostic Logs", fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
 

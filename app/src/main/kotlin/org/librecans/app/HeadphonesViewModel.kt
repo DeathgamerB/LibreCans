@@ -12,6 +12,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +28,21 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
     private val TAG = "HeadphonesViewModel"
 
     private val _pairedDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
+    private var isReceiverRegistered = false
+
+    private val bluetoothReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val action = intent?.action
+            if (action == BluetoothDevice.ACTION_ACL_CONNECTED) {
+                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                val name = device?.name ?: ""
+                if (looksLikeSonyHeadset(name)) {
+                    Log.d(TAG, "Sony headset ACL Connected: $name, triggering auto-connect")
+                    autoConnectIfPaired()
+                }
+            }
+        }
+    }
     val pairedDevices: StateFlow<List<BluetoothDevice>> = _pairedDevices.asStateFlow()
 
     private val _connectionState = MutableStateFlow(BluetoothDeviceState())
@@ -81,6 +97,20 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
             val intent = Intent(context, BluetoothConnectionService::class.java)
             context.startService(intent) // Ensure service stays alive independently of activity
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+
+            // Register BroadcastReceiver for real-time Bluetooth system connection detection
+            val filter = android.content.IntentFilter().apply {
+                addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+            }
+            // Use ContextCompat to safely specify RECEIVER_EXPORTED flag, preventing SecurityException crash on Android 14+ (API 34/35)
+            ContextCompat.registerReceiver(
+                context,
+                bluetoothReceiver,
+                filter,
+                ContextCompat.RECEIVER_EXPORTED
+            )
+            isReceiverRegistered = true
+
             loadPairedDevices()
         } else {
             Log.d(TAG, "Cannot initialize BluetoothConnectionService yet: permissions not granted")
@@ -95,6 +125,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
                 looksLikeSonyHeadset(name)
             }
             _pairedDevices.value = bonded
+            autoConnectIfPaired()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load paired devices: ${e.message}")
         }
@@ -105,17 +136,44 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
         return prefixes.any { name.startsWith(it, ignoreCase = true) || name.contains(it, ignoreCase = true) }
     }
 
+    fun getConnectedSonyDevice(): BluetoothDevice? {
+        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return null
+        return try {
+            val isConnectedMethod = BluetoothDevice::class.java.getMethod("isConnected")
+            adapter.bondedDevices.firstOrNull { dev ->
+                val name = dev.name ?: ""
+                looksLikeSonyHeadset(name) && isConnectedMethod.invoke(dev) as Boolean
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check device connection status via reflection: ${e.message}")
+            null
+        }
+    }
+
     private fun autoConnectIfPaired() {
         if (_connectionState.value.connected || _connectionState.value.connecting) return
-        val devices = _pairedDevices.value
-        if (devices.isNotEmpty()) {
-            val autoTarget = devices.first()
-            Log.d(TAG, "Auto-connecting to already paired Sony headset: ${autoTarget.name} (${autoTarget.address})")
-            connectDevice(autoTarget.address)
+        viewModelScope.launch {
+            val startTime = System.currentTimeMillis()
+            var connectedDevice = getConnectedSonyDevice()
+
+            // Poll for up to 5 seconds, checking every 500ms
+            while (connectedDevice == null && (System.currentTimeMillis() - startTime) < 5000) {
+                delay(500)
+                connectedDevice = getConnectedSonyDevice()
+            }
+
+            if (connectedDevice != null) {
+                if (!_connectionState.value.connected && !_connectionState.value.connecting) {
+                    Log.d(TAG, "Auto-connecting to already connected system Sony headset: ${connectedDevice.name} (${connectedDevice.address})")
+                    connectDevice(connectedDevice.address)
+                }
+            }
         }
     }
 
     fun connectDevice(macAddress: String) {
+        // Instantly transition local viewmodel state to Connecting to eliminate any service binding/start latencies
+        _connectionState.value = BluetoothDeviceState(connecting = true, deviceMac = macAddress)
         val context = getApplication<Application>().applicationContext
         val intent = Intent(context, BluetoothConnectionService::class.java).apply {
             putExtra("EXTRA_MAC_ADDRESS", macAddress)
@@ -167,8 +225,17 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
 
     override fun onCleared() {
         super.onCleared()
+        val context = getApplication<Application>().applicationContext
+        if (isReceiverRegistered) {
+            try {
+                context.unregisterReceiver(bluetoothReceiver)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to unregister bluetoothReceiver: ${e.message}")
+            }
+            isReceiverRegistered = false
+        }
         if (isBound) {
-            getApplication<Application>().applicationContext.unbindService(serviceConnection)
+            context.unbindService(serviceConnection)
             isBound = false
         }
     }

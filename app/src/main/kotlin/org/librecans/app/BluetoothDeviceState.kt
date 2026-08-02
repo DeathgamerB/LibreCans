@@ -13,7 +13,7 @@ data class BluetoothDeviceState(
 
     // Ambient Sound Control
     val ambientSoundControl: Boolean = false,
-    val asmLevel: Int = 10,
+    val asmLevel: Int = 20,
     val focusOnVoice: Boolean = false,
     val focusOnVoiceAvailable: Boolean = false,
 
@@ -46,5 +46,5 @@ data class BluetoothDeviceState(
     val adaptiveVolume: Boolean = false
 ) {
     val isFocusOnVoiceAvailable: Boolean
-        get() = ambientSoundControl && asmLevel > 2
+        get() = focusOnVoiceAvailable
 }
