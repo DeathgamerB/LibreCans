@@ -190,7 +190,8 @@ fun AncAmbientControl(
                                     checked = state.focusOnVoice,
                                     onCheckedChange = { checked ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onSetAmbientMode(true, state.asmLevel, checked, true)
+                                        val targetLevel = if (checked && state.asmLevel < 3) 3 else state.asmLevel
+                                        onSetAmbientMode(true, targetLevel, checked, true)
                                     },
                                     colors = SwitchDefaults.colors(
                                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,

@@ -155,7 +155,7 @@ class BluetoothRepository(private val context: Context) {
 
             val startTime = System.currentTimeMillis()
             var attempt = 1
-            while (connectedSocket == null && (System.currentTimeMillis() - startTime) < 5000) {
+            while (connectedSocket == null && (System.currentTimeMillis() - startTime) < 10000) {
                 Log.d(TAG, "Connection attempt $attempt...")
                 DebugLogger.log(context, "BluetoothRepository", "Connection attempt $attempt for $macAddress")
 
@@ -218,7 +218,7 @@ class BluetoothRepository(private val context: Context) {
 
             } else {
                 DebugLogger.log(context, "BluetoothRepository", "Failed to connect to headphones.")
-                updateError("Failed to connect to headphones. Ensure they are powered on and paired.")
+                _deviceState.value = BluetoothDeviceState(connecting = false, errorMessage = "Failed to connect. Tap to try again.")
             }
         }
     }
