@@ -57,7 +57,7 @@ fun PairingScreen(
         permissionsGranted = granted
         showRationale = !granted
         if (granted) {
-            viewModel.loadPairedDevices()
+            viewModel.initializeService()
         }
     }
 
@@ -73,6 +73,12 @@ fun PairingScreen(
     LaunchedEffect(state.connected) {
         if (state.connected) {
             onNavigateToMain()
+        }
+    }
+
+    LaunchedEffect(permissionsGranted) {
+        if (permissionsGranted) {
+            viewModel.initializeService()
         }
     }
 

@@ -17,6 +17,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.librecans.protocol.EqPreset
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 
 @SuppressLint("MissingPermission")
 class HeadphonesViewModel(application: Application) : AndroidViewModel(application) {
@@ -30,6 +34,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
 
     private var isBound = false
     private var connectionService: BluetoothConnectionService? = null
+    private var isServiceInitialized = false
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -58,13 +63,28 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     init {
-        // Bind to BluetoothConnectionService to start/observe connection
-        val context = getApplication<Application>().applicationContext
-        val intent = Intent(context, BluetoothConnectionService::class.java)
-        context.startService(intent) // Ensure service stays alive independently of activity
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        initializeService()
+    }
 
-        loadPairedDevices()
+    fun initializeService() {
+        if (isServiceInitialized) return
+        val context = getApplication<Application>().applicationContext
+        val hasPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+        if (hasPermissions) {
+            isServiceInitialized = true
+            Log.d(TAG, "Initializing and starting BluetoothConnectionService")
+            val intent = Intent(context, BluetoothConnectionService::class.java)
+            context.startService(intent) // Ensure service stays alive independently of activity
+            context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+            loadPairedDevices()
+        } else {
+            Log.d(TAG, "Cannot initialize BluetoothConnectionService yet: permissions not granted")
+        }
     }
 
     fun loadPairedDevices() {
