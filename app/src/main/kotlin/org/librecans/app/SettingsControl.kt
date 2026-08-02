@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +30,7 @@ fun SettingsControl(
     onSetSpeakToChat: (Boolean) -> Unit,
     onSetAdaptiveVolume: (Boolean) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val apoOptions = listOf(
         "Off", "5 Minutes", "30 Minutes", "1 Hour", "3 Hours", "When Taken Off"
     )
@@ -211,7 +214,10 @@ fun SettingsControl(
                             }
                             Switch(
                                 checked = state.dsee,
-                                onCheckedChange = { onSetDsee(it) }
+                            onCheckedChange = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onSetDsee(it)
+                            }
                             )
                         }
 
@@ -256,6 +262,7 @@ fun SettingsControl(
                                             DropdownMenuItem(
                                                 text = { Text(option) },
                                                 onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                                     onSetAutoPowerOff(index)
                                                     expanded = false
                                                 }
@@ -288,7 +295,10 @@ fun SettingsControl(
                                 }
                                 Switch(
                                     checked = state.speakToChat,
-                                    onCheckedChange = { onSetSpeakToChat(it) }
+                                onCheckedChange = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onSetSpeakToChat(it)
+                                }
                                 )
                             }
                         }
@@ -315,7 +325,10 @@ fun SettingsControl(
                                 }
                                 Switch(
                                     checked = state.adaptiveVolume,
-                                    onCheckedChange = { onSetAdaptiveVolume(it) }
+                                onCheckedChange = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onSetAdaptiveVolume(it)
+                                }
                                 )
                             }
                         }

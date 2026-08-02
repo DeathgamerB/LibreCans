@@ -334,7 +334,7 @@ class BluetoothRepository(private val context: Context) {
                     }
                 }
             }
-            V2Command.EQ_RET, V2Command.EQ_SET -> { // EQ RET or SET
+            V2Command.EQ_RET -> { // EQ RET
                 if (payload.size >= 3) {
                     val presetByte = payload[2]
                     val state = _deviceState.value
@@ -344,7 +344,7 @@ class BluetoothRepository(private val context: Context) {
                     if (payload.size >= 10) {
                         clearBass = (payload[4].toInt() and 0xFF) - 10
                         bands = (0 until 5).map { i ->
-                            (payload[5 + i].toInt() and 0xFF) - 10
+                            (payload[5 + i].toInt() and 0xFF) - 6
                         }
                     }
 
@@ -576,6 +576,8 @@ class BluetoothRepository(private val context: Context) {
         val outStream = socket?.outputStream ?: throw IOException("Socket is closed")
         synchronized(ioMutex) {
             val packed = CommandSerializer.packageDataForBt(bytes, DataType.DATA_MDR, seqNumber++)
+            val hexStr = packed.joinToString("") { String.format("%02X ", it) }
+            Log.d(TAG, "Writing packed frame to BluetoothSocket: size=${packed.size} bytes, frame hex=$hexStr")
             outStream.write(packed)
             outStream.flush()
         }
@@ -758,9 +760,6 @@ class BluetoothRepository(private val context: Context) {
     }
 
     fun setEqualizerCustom(clearBass: Int, bands: List<Int>) {
-        val clamp = { v: Int ->
-            (v.coerceIn(-10, 10) + 10).toByte()
-        }
         val out = java.io.ByteArrayOutputStream()
         out.write(V2Command.EQ_SET.toInt())
         out.write(0x00)
@@ -774,23 +773,33 @@ class BluetoothRepository(private val context: Context) {
 
         out.write(presetToSend.value.toInt())
         out.write(0x06)
-        out.write(clamp(clearBass).toInt())
+
+        // Clear Bass: range -10..10, offset 10 (bytes 0..20)
+        val clearBassByte = (clearBass.coerceIn(-10, 10) + 10).toByte()
+        out.write(clearBassByte.toInt())
+
+        // 5 bands: range -6..6, offset 6 (bytes 0..12)
         for (i in 0 until 5) {
             val bVal = if (i < bands.size) bands[i] else 0
-            out.write(clamp(bVal).toInt())
+            val bandByte = (bVal.coerceIn(-6, 6) + 6).toByte()
+            out.write(bandByte.toInt())
         }
 
-        val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i] else 0 }
+        val packedBytes = out.toByteArray()
+        val payloadHex = packedBytes.joinToString("") { String.format("%02X ", it) }
+        Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
+
+        val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-6, 6) else 0 }
 
         updateStateOptimistically(
             update = { current ->
                 current.copy(
                     eqPreset = if (currentPreset == EqPreset.CUSTOM_1 || currentPreset == EqPreset.CUSTOM_2) currentPreset else EqPreset.MANUAL,
-                    eqClearBass = clearBass,
+                    eqClearBass = clearBass.coerceIn(-10, 10),
                     eqBands = targetBands
                 )
             },
-            bytes = out.toByteArray()
+            bytes = packedBytes
         )
     }
 

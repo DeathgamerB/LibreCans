@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +21,7 @@ fun AncAmbientControl(
     state: BluetoothDeviceState,
     onSetAmbientMode: (controlOn: Boolean, level: Int, focusVoice: Boolean) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -46,7 +49,10 @@ fun AncAmbientControl(
 
                 val ncInteraction = remember { MutableInteractionSource() }
                 Button(
-                    onClick = { onSetAmbientMode(true, 0, false) },
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onSetAmbientMode(true, 0, false)
+                    },
                     interactionSource = ncInteraction,
                     modifier = Modifier.weight(1f).bounceClick(ncInteraction),
                     colors = ButtonDefaults.buttonColors(
@@ -61,7 +67,10 @@ fun AncAmbientControl(
 
                 val ambientInteraction = remember { MutableInteractionSource() }
                 Button(
-                    onClick = { onSetAmbientMode(true, 10, state.focusOnVoice) },
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onSetAmbientMode(true, 10, state.focusOnVoice)
+                    },
                     interactionSource = ambientInteraction,
                     modifier = Modifier.weight(1.3f).bounceClick(ambientInteraction),
                     colors = ButtonDefaults.buttonColors(
@@ -76,7 +85,10 @@ fun AncAmbientControl(
 
                 val offInteraction = remember { MutableInteractionSource() }
                 Button(
-                    onClick = { onSetAmbientMode(false, 0, false) },
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onSetAmbientMode(false, 0, false)
+                    },
                     interactionSource = offInteraction,
                     modifier = Modifier.weight(1f).bounceClick(offInteraction),
                     colors = ButtonDefaults.buttonColors(
@@ -123,7 +135,11 @@ fun AncAmbientControl(
                     Slider(
                         value = state.asmLevel.toFloat(),
                         onValueChange = { level ->
-                            onSetAmbientMode(true, level.toInt(), state.focusOnVoice)
+                            val intLevel = level.toInt()
+                            if (intLevel != state.asmLevel) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+                            onSetAmbientMode(true, intLevel, state.focusOnVoice)
                         },
                         valueRange = 1f..20f,
                         steps = 18,
@@ -156,6 +172,7 @@ fun AncAmbientControl(
                             Switch(
                                 checked = state.focusOnVoice,
                                 onCheckedChange = { checked ->
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onSetAmbientMode(true, state.asmLevel, checked)
                                 },
                                 colors = SwitchDefaults.colors(

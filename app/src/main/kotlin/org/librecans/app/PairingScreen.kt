@@ -205,7 +205,11 @@ fun PairingScreen(
                         ) {
                             items(pairedDevices) { device ->
                                 DeviceItemRow(device = device) {
-                                    viewModel.connectDevice(device.address)
+                                    if (state.connected && state.deviceMac == device.address) {
+                                        onNavigateToMain()
+                                    } else if (!state.connecting) {
+                                        viewModel.connectDevice(device.address)
+                                    }
                                 }
                             }
                         }

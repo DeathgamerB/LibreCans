@@ -27,6 +27,21 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
     private val TAG = "HeadphonesViewModel"
 
     private val _pairedDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
+    private var isReceiverRegistered = false
+
+    private val bluetoothReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val action = intent?.action
+            if (action == BluetoothDevice.ACTION_ACL_CONNECTED) {
+                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                val name = device?.name ?: ""
+                if (looksLikeSonyHeadset(name)) {
+                    Log.d(TAG, "Sony headset ACL Connected: $name, triggering auto-connect")
+                    autoConnectIfPaired()
+                }
+            }
+        }
+    }
     val pairedDevices: StateFlow<List<BluetoothDevice>> = _pairedDevices.asStateFlow()
 
     private val _connectionState = MutableStateFlow(BluetoothDeviceState())
@@ -81,6 +96,14 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
             val intent = Intent(context, BluetoothConnectionService::class.java)
             context.startService(intent) // Ensure service stays alive independently of activity
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+
+            // Register BroadcastReceiver for real-time Bluetooth system connection detection
+            val filter = android.content.IntentFilter().apply {
+                addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+            }
+            context.registerReceiver(bluetoothReceiver, filter)
+            isReceiverRegistered = true
+
             loadPairedDevices()
         } else {
             Log.d(TAG, "Cannot initialize BluetoothConnectionService yet: permissions not granted")
@@ -181,8 +204,17 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
 
     override fun onCleared() {
         super.onCleared()
+        val context = getApplication<Application>().applicationContext
+        if (isReceiverRegistered) {
+            try {
+                context.unregisterReceiver(bluetoothReceiver)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to unregister bluetoothReceiver: ${e.message}")
+            }
+            isReceiverRegistered = false
+        }
         if (isBound) {
-            getApplication<Application>().applicationContext.unbindService(serviceConnection)
+            context.unbindService(serviceConnection)
             isBound = false
         }
     }
