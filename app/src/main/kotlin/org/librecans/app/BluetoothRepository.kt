@@ -120,37 +120,51 @@ class BluetoothRepository(private val context: Context) {
 
             val name = device.name ?: "Sony Headset"
             Log.d(TAG, "Attempting to connect to device: $name ($macAddress)")
+            DebugLogger.log(context, "BluetoothRepository", "Attempting to connect to device: $name ($macAddress)")
 
             // Check protocol cache
             val cachedVersion = protocolCache[macAddress]
             var connectedSocket: BluetoothSocket? = null
             var usedVersion: SonyProtocolVersion? = null
 
-            if (cachedVersion != null) {
-                Log.d(TAG, "Trying cached protocol version: $cachedVersion")
-                val uuidStr = if (cachedVersion == SonyProtocolVersion.V2) Constants.SERVICE_UUID_V2 else Constants.SERVICE_UUID
-                connectedSocket = tryConnectSocket(device, uuidStr)
-                if (connectedSocket != null) {
-                    usedVersion = cachedVersion
-                }
-            }
+            val startTime = System.currentTimeMillis()
+            var attempt = 1
+            while (connectedSocket == null && (System.currentTimeMillis() - startTime) < 5000) {
+                Log.d(TAG, "Connection attempt $attempt...")
+                DebugLogger.log(context, "BluetoothRepository", "Connection attempt $attempt for $macAddress")
 
-            if (connectedSocket == null) {
-                Log.d(TAG, "No cache or cached connection failed. Trying V1 UUID...")
-                connectedSocket = tryConnectSocket(device, Constants.SERVICE_UUID)
-                if (connectedSocket != null) {
-                    usedVersion = SonyProtocolVersion.V1
-                } else {
-                    Log.d(TAG, "V1 UUID connection failed. Trying V2 UUID...")
-                    connectedSocket = tryConnectSocket(device, Constants.SERVICE_UUID_V2)
+                if (cachedVersion != null) {
+                    Log.d(TAG, "Trying cached protocol version: $cachedVersion")
+                    val uuidStr = if (cachedVersion == SonyProtocolVersion.V2) Constants.SERVICE_UUID_V2 else Constants.SERVICE_UUID
+                    connectedSocket = tryConnectSocket(device, uuidStr)
                     if (connectedSocket != null) {
-                        usedVersion = SonyProtocolVersion.V2
+                        usedVersion = cachedVersion
                     }
+                }
+
+                if (connectedSocket == null) {
+                    Log.d(TAG, "No cache or cached connection failed. Trying V1 UUID...")
+                    connectedSocket = tryConnectSocket(device, Constants.SERVICE_UUID)
+                    if (connectedSocket != null) {
+                        usedVersion = SonyProtocolVersion.V1
+                    } else {
+                        Log.d(TAG, "V1 UUID connection failed. Trying V2 UUID...")
+                        connectedSocket = tryConnectSocket(device, Constants.SERVICE_UUID_V2)
+                        if (connectedSocket != null) {
+                            usedVersion = SonyProtocolVersion.V2
+                        }
+                    }
+                }
+
+                if (connectedSocket == null) {
+                    attempt++
+                    delay(500) // Wait 500ms before retrying
                 }
             }
 
             if (connectedSocket != null && usedVersion != null) {
                 Log.d(TAG, "Successfully connected via protocol: $usedVersion")
+                DebugLogger.log(context, "BluetoothRepository", "Successfully connected via protocol: $usedVersion")
                 protocolCache[macAddress] = usedVersion
                 socket = connectedSocket
                 isConnected = true
@@ -177,6 +191,7 @@ class BluetoothRepository(private val context: Context) {
                 startPollingLoop(usedVersion)
 
             } else {
+                DebugLogger.log(context, "BluetoothRepository", "Failed to connect to headphones.")
                 updateError("Failed to connect to headphones. Ensure they are powered on and paired.")
             }
         }
@@ -185,12 +200,15 @@ class BluetoothRepository(private val context: Context) {
     private fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
         val uuid = UUID.fromString(uuidStr)
         var sock: BluetoothSocket? = null
+        DebugLogger.log(context, "BluetoothRepository", "tryConnectSocket to UUID $uuidStr")
         return try {
             sock = device.createRfcommSocketToServiceRecord(uuid)
             sock.connect()
+            DebugLogger.log(context, "BluetoothRepository", "RFCOMM socket connect successful to UUID $uuidStr")
             sock
         } catch (e: IOException) {
             Log.w(TAG, "Connection failed to UUID $uuidStr: ${e.message}")
+            DebugLogger.log(context, "BluetoothRepository", "Connection failed to UUID $uuidStr: ${e.message}")
             try {
                 sock?.close()
             } catch (closeEx: IOException) {
@@ -259,6 +277,8 @@ class BluetoothRepository(private val context: Context) {
             val sub = if (msg.payload.size > 1) msg.payload[1] else -1.toByte()
 
             Log.d(TAG, "Recv DATA_MDR: op=0x${String.format("%02X", op)}, sub=0x${String.format("%02X", sub)}")
+            val payloadHex = msg.payload.joinToString("") { String.format("%02X ", it) }
+            DebugLogger.log(context, "BluetoothRepository", "Received DATA_MDR: op=0x${String.format("%02X", op)} sub=0x${String.format("%02X", sub)} | payload hex: $payloadHex")
 
             // Complete any pending deferables
             val keySub = "0x${String.format("%02X", op)}_0x${String.format("%02X", sub)}"
@@ -344,7 +364,7 @@ class BluetoothRepository(private val context: Context) {
                     if (payload.size >= 10) {
                         clearBass = (payload[4].toInt() and 0xFF) - 10
                         bands = (0 until 5).map { i ->
-                            (payload[5 + i].toInt() and 0xFF) - 6
+                            (payload[5 + i].toInt() and 0xFF) - 10
                         }
                     }
 
@@ -454,6 +474,13 @@ class BluetoothRepository(private val context: Context) {
                 sendCommandAndReadResponse(byteArrayOf(V2Command.DSEE_GET, 0x01), V2Command.DSEE_RET)
             } catch (e: Exception) {
                 Log.w(TAG, "Failed DSEE query: ${e.message}")
+            }
+
+            // Actively query current V2 ambient/NC state immediately upon successful connection
+            try {
+                sendCommandAndReadResponse(byteArrayOf(0x66, 0x17), 0x67)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed initial V2 ambient check: ${e.message}")
             }
 
             // Probe capability-gated extras with timeouts
@@ -578,6 +605,10 @@ class BluetoothRepository(private val context: Context) {
             val packed = CommandSerializer.packageDataForBt(bytes, DataType.DATA_MDR, seqNumber++)
             val hexStr = packed.joinToString("") { String.format("%02X ", it) }
             Log.d(TAG, "Writing packed frame to BluetoothSocket: size=${packed.size} bytes, frame hex=$hexStr")
+
+            val payloadHex = bytes.joinToString("") { String.format("%02X ", it) }
+            DebugLogger.log(context, "BluetoothRepository", "Writing command payload (size=${bytes.size} bytes) hex: $payloadHex | packed frame hex: $hexStr")
+
             outStream.write(packed)
             outStream.flush()
         }
@@ -778,10 +809,10 @@ class BluetoothRepository(private val context: Context) {
         val clearBassByte = (clearBass.coerceIn(-10, 10) + 10).toByte()
         out.write(clearBassByte.toInt())
 
-        // 5 bands: range -6..6, offset 6 (bytes 0..12)
+        // 5 bands: range -10..10, offset 10 (bytes 0..20)
         for (i in 0 until 5) {
             val bVal = if (i < bands.size) bands[i] else 0
-            val bandByte = (bVal.coerceIn(-6, 6) + 6).toByte()
+            val bandByte = (bVal.coerceIn(-10, 10) + 10).toByte()
             out.write(bandByte.toInt())
         }
 
@@ -789,7 +820,7 @@ class BluetoothRepository(private val context: Context) {
         val payloadHex = packedBytes.joinToString("") { String.format("%02X ", it) }
         Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
 
-        val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-6, 6) else 0 }
+        val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
 
         updateStateOptimistically(
             update = { current ->
@@ -881,6 +912,7 @@ class BluetoothRepository(private val context: Context) {
         isConnected = false
         socket = null
         pollJob?.cancel()
+        DebugLogger.log(context, "BluetoothRepository", "Connection dropped / socket closed.")
         _deviceState.value = BluetoothDeviceState(errorMessage = "Headphones disconnected.")
     }
 
@@ -892,6 +924,7 @@ class BluetoothRepository(private val context: Context) {
         isConnected = false
         pollJob?.cancel()
         ioJob?.cancel()
+        DebugLogger.log(context, "BluetoothRepository", "Explicit disconnect() requested.")
         try {
             socket?.close()
         } catch (e: Exception) {

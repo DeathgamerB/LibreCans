@@ -13,7 +13,8 @@ import androidx.compose.ui.Modifier
 enum class AppScreen {
     PAIRING,
     DASHBOARD,
-    ABOUT
+    ABOUT,
+    DEBUG_LOG
 }
 
 class MainActivity : ComponentActivity() {
@@ -22,6 +23,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        DebugLogger.initialize(applicationContext)
         setContent {
             LibreCansTheme {
                 Surface(
@@ -51,8 +53,18 @@ class MainActivity : ComponentActivity() {
                         }
                         AppScreen.ABOUT -> {
                             AboutScreen(
+                                onNavigateToDebugLogs = {
+                                    currentScreen = AppScreen.DEBUG_LOG
+                                },
                                 onBack = {
                                     currentScreen = AppScreen.DASHBOARD
+                                }
+                            )
+                        }
+                        AppScreen.DEBUG_LOG -> {
+                            DebugLogScreen(
+                                onBack = {
+                                    currentScreen = AppScreen.ABOUT
                                 }
                             )
                         }

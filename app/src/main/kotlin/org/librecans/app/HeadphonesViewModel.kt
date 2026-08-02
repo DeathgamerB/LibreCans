@@ -12,6 +12,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -145,14 +146,28 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun autoConnectIfPaired() {
         if (_connectionState.value.connected || _connectionState.value.connecting) return
-        val connectedDevice = getConnectedSonyDevice()
-        if (connectedDevice != null) {
-            Log.d(TAG, "Auto-connecting to already connected system Sony headset: ${connectedDevice.name} (${connectedDevice.address})")
-            connectDevice(connectedDevice.address)
+        viewModelScope.launch {
+            val startTime = System.currentTimeMillis()
+            var connectedDevice = getConnectedSonyDevice()
+
+            // Poll for up to 5 seconds, checking every 500ms
+            while (connectedDevice == null && (System.currentTimeMillis() - startTime) < 5000) {
+                delay(500)
+                connectedDevice = getConnectedSonyDevice()
+            }
+
+            if (connectedDevice != null) {
+                if (!_connectionState.value.connected && !_connectionState.value.connecting) {
+                    Log.d(TAG, "Auto-connecting to already connected system Sony headset: ${connectedDevice.name} (${connectedDevice.address})")
+                    connectDevice(connectedDevice.address)
+                }
+            }
         }
     }
 
     fun connectDevice(macAddress: String) {
+        // Instantly transition local viewmodel state to Connecting to eliminate any service binding/start latencies
+        _connectionState.value = BluetoothDeviceState(connecting = true, deviceMac = macAddress)
         val context = getApplication<Application>().applicationContext
         val intent = Intent(context, BluetoothConnectionService::class.java).apply {
             putExtra("EXTRA_MAC_ADDRESS", macAddress)

@@ -169,7 +169,7 @@ fun EqualizerControl(
                             Slider(
                                 value = bandValue.toFloat(),
                                 onValueChange = { newValue ->
-                                    val intValue = newValue.toInt().coerceIn(-6, 6)
+                                    val intValue = newValue.toInt().coerceIn(-10, 10)
                                     if (intValue != bandValue) {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     }
@@ -179,8 +179,8 @@ fun EqualizerControl(
                                     newBands[i] = intValue
                                     onSetCustomEq(state.eqClearBass, newBands)
                                 },
-                                valueRange = -6f..6f,
-                                steps = 11,
+                                valueRange = -10f..10f,
+                                steps = 19,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
