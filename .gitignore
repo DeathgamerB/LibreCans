@@ -16,5 +16,5 @@ build/
 .DS_Store
 *.log
 
-# Submodules/Sources
+# Submodules/Sources (Confirmed and verified to prevent re-committing)
 sonybridge_source/
