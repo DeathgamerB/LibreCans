@@ -39,91 +39,6 @@ fun SettingsControl(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Hero Image and Battery Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Premium Generic Headphone Artwork
-                Box(
-                    modifier = Modifier
-                        .size(140.dp)
-                        .clip(RoundedCornerShape(70.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "🎧",
-                        fontSize = 72.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Model name & mac
-                Text(
-                    text = state.deviceName,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = state.deviceMac,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Battery indicators
-                if (state.hasDualBattery) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        BatteryIndicator(label = "Left Bud", percent = state.batteryLeft)
-                        BatteryIndicator(label = "Right Bud", percent = state.batteryRight)
-                        if (state.batteryCase >= 0) {
-                            BatteryIndicator(label = "Case", percent = state.batteryCase)
-                        }
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Battery: ",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = if (state.batteryLevel >= 0) "${state.batteryLevel}%" else "Unknown",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        if (state.batteryCharging) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "⚡ Charging",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.secondary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
         // Hardware details / Readout Card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -375,4 +290,95 @@ fun DetailRow(label: String, value: String) {
             fontWeight = FontWeight.Bold
         )
     }
+}
+
+@Composable
+fun DeviceHeroCard(state: BluetoothDeviceState) {
+    // Hero Image and Battery Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Premium Generic Headphone Artwork
+                Box(
+                    modifier = Modifier
+                        .size(140.dp)
+                        .clip(RoundedCornerShape(70.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val isTWS = state.deviceName.startsWith("WF-", ignoreCase = true) || state.deviceName.contains("LinkBuds", ignoreCase = true)
+                    Text(
+                        text = if (isTWS) "🦻" else "🎧",
+                        fontSize = 72.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Model name & mac
+                Text(
+                    text = state.deviceName,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black
+                )
+                Text(
+                    text = state.deviceMac,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Battery indicators
+                if (state.hasDualBattery) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        BatteryIndicator(label = "Left Bud", percent = state.batteryLeft)
+                        BatteryIndicator(label = "Right Bud", percent = state.batteryRight)
+                        if (state.batteryCase >= 0) {
+                            BatteryIndicator(label = "Case", percent = state.batteryCase)
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Battery: ",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = if (state.batteryLevel >= 0) "${state.batteryLevel}%" else "Unknown",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (state.batteryCharging) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "⚡ Charging",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+
 }

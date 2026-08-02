@@ -56,6 +56,7 @@ fun MainDashboard(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
+                .safeDrawingPadding()
                 .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -63,11 +64,14 @@ fun MainDashboard(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
+            // Hero Image and Battery
+            DeviceHeroCard(state = state)
+
             // ANC/Ambient Controls Card
             AncAmbientControl(
                 state = state,
-                onSetAmbientMode = { controlOn, level, focusVoice ->
-                    viewModel.setAmbientMode(controlOn, level, focusVoice)
+                onSetAmbientMode = { controlOn, level, focusVoice, sendWrite ->
+                    viewModel.setAmbientMode(controlOn, level, focusVoice, sendWrite)
                 }
             )
 
@@ -79,8 +83,8 @@ fun MainDashboard(
                     onSetPreset = { preset ->
                         viewModel.setEqualizerPreset(preset)
                     },
-                    onSetCustomEq = { clearBass, bands ->
-                        viewModel.setEqualizerCustom(clearBass, bands)
+                    onSetCustomEq = { clearBass, bands, sendWrite ->
+                        viewModel.setEqualizerCustom(clearBass, bands, sendWrite)
                     }
                 )
             } else {

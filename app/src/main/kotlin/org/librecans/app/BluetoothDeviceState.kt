@@ -15,7 +15,7 @@ data class BluetoothDeviceState(
     val ambientSoundControl: Boolean = false,
     val asmLevel: Int = 20,
     val focusOnVoice: Boolean = false,
-    val focusOnVoiceAvailable: Boolean = false,
+    val focusOnVoiceAvailable: Boolean = true,
 
     // Battery Levels
     val batteryLevel: Int = -1,

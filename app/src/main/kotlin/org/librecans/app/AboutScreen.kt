@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import org.librecans.app.BuildConfig
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -136,47 +137,49 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Debug Diagnostics card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Bluetooth Diagnostics",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "Log connection and protocol events",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+            if (BuildConfig.DEBUG) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Bluetooth Diagnostics",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Log connection and protocol events",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = isDebugEnabled,
+                                onCheckedChange = { checked ->
+                                    DebugLogger.toggleDebugMode(context, checked)
+                                    isDebugEnabled = checked
+                                }
                             )
                         }
-                        Switch(
-                            checked = isDebugEnabled,
-                            onCheckedChange = { checked ->
-                                DebugLogger.toggleDebugMode(context, checked)
-                                isDebugEnabled = checked
-                            }
-                        )
-                    }
 
-                    if (isDebugEnabled) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = onNavigateToDebugLogs,
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("View Diagnostic Logs", fontWeight = FontWeight.Bold)
+                        if (isDebugEnabled) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = onNavigateToDebugLogs,
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("View Diagnostic Logs", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
