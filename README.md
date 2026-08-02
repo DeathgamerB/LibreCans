@@ -21,10 +21,7 @@ This project is built as a permitted derivative of **SonyBridge** and **SonyHead
 ---
 
 ## Known Limitations & Testing
-- **Hardware Verification**: Only the **WH-CH720N** has been hardware-verified by the upstream projects; other Sony models (e.g. WH-1000XM3, WH-1000XM4, WH-1000XM5, LinkBuds S, WF-C700N, etc.) are highly expected to work based on shared protocol families.
-- **On-Device Bluetooth Verification Required**: Because Bluetooth socket I/O is tied directly to physical hardware, on-device testing is required for RFCOMM communication. The codebase isolates all Bluetooth socket activity in `BluetoothRepository.kt` to make it straightforward to inspect, test, and debug.
-
----
+- **Hardware Verification**: Only the **WH-CH720N and Wf-1000xm5** have been hardware-verified by the upstream projects and me; other Sony models (e.g. WH-1000XM3, WH-1000XM4, WH-1000XM5, LinkBuds S, WF-C700N, etc.) are highly expected to work based on shared protocol families.
 
 ## Architecture
 The project is structured into two modules:
