@@ -65,7 +65,6 @@ fun MainDashboard(
             DeviceHeroCard(
                 deviceName = state.deviceName,
                 deviceMac = state.deviceMac,
-                hasDualBattery = state.hasDualBattery,
                 batteryLevel = state.batteryLevel,
                 batteryCharging = state.batteryCharging,
                 batteryLeft = state.batteryLeft,

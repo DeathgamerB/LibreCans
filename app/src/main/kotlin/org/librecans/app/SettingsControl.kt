@@ -283,7 +283,6 @@ fun DetailRow(label: String, value: String) {
 fun DeviceHeroCard(
     deviceName: String,
     deviceMac: String,
-    hasDualBattery: Boolean,
     batteryLevel: Int,
     batteryCharging: Boolean,
     batteryLeft: Int,
@@ -330,7 +329,7 @@ fun DeviceHeroCard(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Battery indicators
-                if (hasDualBattery) {
+                if (isTWS) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
