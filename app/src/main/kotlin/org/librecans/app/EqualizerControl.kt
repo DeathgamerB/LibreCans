@@ -32,7 +32,7 @@ fun EqualizerControl(
     onSetPreset: (EqPreset) -> Unit,
     onSetCustomEq: (clearBass: Int, bands: List<Int>, sendWrite: Boolean) -> Unit
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
+    var isSlidersExpanded by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
     val presets = listOf(
@@ -61,7 +61,6 @@ fun EqualizerControl(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded }
                     .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -72,18 +71,8 @@ fun EqualizerControl(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                Text(
-                    text = if (isExpanded) "▲" else "▼",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
             }
 
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)),
-                exit = shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium))
-            ) {
                 Column(modifier = Modifier.testTag("eq_panel_content")) {
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -113,6 +102,7 @@ fun EqualizerControl(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onSetPreset(preset)
+                            isSlidersExpanded = (preset == EqPreset.MANUAL || preset == EqPreset.MANUAL_V2 || preset == EqPreset.CUSTOM_1 || preset == EqPreset.CUSTOM_2)
                         },
                         interactionSource = chipInteractionSource,
                         modifier = Modifier.bounceClick(chipInteractionSource),
@@ -136,12 +126,35 @@ fun EqualizerControl(
             }
 
             // Manual band sliders (shown when MANUAL or V2 custom presets are selected)
-            val showSliders = state.eqPreset == EqPreset.MANUAL ||
+            val isCustomPresetActive = state.eqPreset == EqPreset.MANUAL ||
                               state.eqPreset == EqPreset.MANUAL_V2 ||
                               state.eqPreset == EqPreset.CUSTOM_1 ||
                               state.eqPreset == EqPreset.CUSTOM_2
+                AnimatedVisibility(visible = isCustomPresetActive) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isSlidersExpanded = !isSlidersExpanded }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Custom EQ Bands",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = if (isSlidersExpanded) "▲" else "▼",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             AnimatedVisibility(
-                visible = showSliders,
+                visible = isCustomPresetActive && isSlidersExpanded,
                 enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium)),
                 exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium))
             ) {
@@ -249,7 +262,6 @@ fun EqualizerControl(
                 }
             }
                 }
-            }
         }
     }
 }
