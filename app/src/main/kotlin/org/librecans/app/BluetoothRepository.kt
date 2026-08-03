@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.librecans.protocol.*
 import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
@@ -35,7 +37,8 @@ class BluetoothRepository(private val context: Context) {
         val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
         _deviceState.value = BluetoothDeviceState(
             asmLevel = storedLevel,
-            focusOnVoice = storedFocus
+            focusOnVoice = storedFocus,
+            storedAsmLevel = storedLevel
         )
     }
 
@@ -123,7 +126,8 @@ class BluetoothRepository(private val context: Context) {
             connecting = true,
             deviceMac = macAddress,
             asmLevel = storedLevel,
-            focusOnVoice = storedFocus
+            focusOnVoice = storedFocus,
+            storedAsmLevel = storedLevel
         )
 
         scope.launch {
@@ -223,18 +227,33 @@ class BluetoothRepository(private val context: Context) {
         }
     }
 
-    private fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
+    private suspend fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
         val uuid = UUID.fromString(uuidStr)
         var sock: BluetoothSocket? = null
         DebugLogger.log(context, "BluetoothRepository", "tryConnectSocket to UUID $uuidStr")
         return try {
             sock = device.createRfcommSocketToServiceRecord(uuid)
-            sock.connect()
+            kotlinx.coroutines.withTimeout(1000L) {
+                kotlinx.coroutines.suspendCancellableCoroutine<Unit> { cont ->
+                    val job = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                        try {
+                            sock?.connect()
+                            if (cont.isActive) cont.resume(Unit)
+                        } catch (e: Exception) {
+                            if (cont.isActive) cont.resumeWithException(e)
+                        }
+                    }
+                    cont.invokeOnCancellation {
+                        try { sock?.close() } catch (ignore: Exception) {}
+                        job.cancel()
+                    }
+                }
+            }
             DebugLogger.log(context, "BluetoothRepository", "RFCOMM socket connect successful to UUID $uuidStr")
             sock
-        } catch (e: IOException) {
-            Log.w(TAG, "Connection failed to UUID $uuidStr: ${e.message}")
-            DebugLogger.log(context, "BluetoothRepository", "Connection failed to UUID $uuidStr: ${e.message}")
+        } catch (e: Exception) {
+            Log.w(TAG, "Connection failed or timed out to UUID $uuidStr: ${e.message}")
+            DebugLogger.log(context, "BluetoothRepository", "Connection failed or timed out to UUID $uuidStr: ${e.message}")
             try {
                 sock?.close()
             } catch (closeEx: IOException) {
@@ -783,6 +802,8 @@ class BluetoothRepository(private val context: Context) {
                     .putInt(KEY_ASM_LEVEL, level)
                     .putBoolean(KEY_FOCUS_ON_VOICE, focusVoice)
                     .apply()
+                // Optimistically update storedAsmLevel in local state
+                _deviceState.value = _deviceState.value.copy(storedAsmLevel = level)
             }
 
             val cmd = if (state.protocolVersion == SonyProtocolVersion.V2 || isMockMode) {

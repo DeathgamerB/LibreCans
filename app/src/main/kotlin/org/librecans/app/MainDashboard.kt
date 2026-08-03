@@ -55,10 +55,10 @@ fun MainDashboard(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding)
-                .safeDrawingPadding()
                 .padding(horizontal = 20.dp)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .padding(innerPadding)
+                .padding(bottom = 24.dp), // Extra padding to avoid cutting off scroll at the very bottom
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

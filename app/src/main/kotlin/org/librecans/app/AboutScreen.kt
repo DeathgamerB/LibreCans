@@ -25,16 +25,17 @@ fun AboutScreen(
     val scrollState = rememberScrollState()
     var isDebugEnabled by remember { mutableStateOf(DebugLogger.isDebugMode) }
 
-    Surface(
+    Scaffold(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
-                .padding(24.dp)
-                .verticalScroll(scrollState),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(scrollState)
+                .padding(innerPadding)
+                .padding(top = 24.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))

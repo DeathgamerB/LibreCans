@@ -50,6 +50,25 @@ fun PairingScreen(
     }
 
     var showRationale by remember { mutableStateOf(!permissionsGranted) }
+    var connectingMac by remember { mutableStateOf<String?>(null) }
+    var connectionTimeout by remember { mutableStateOf(false) }
+
+    // Clear local connecting state if connection succeeds or backend state updates
+    LaunchedEffect(state.connected, state.connecting, state.errorMessage) {
+        if (state.connected || state.errorMessage != null) {
+            connectingMac = null
+            connectionTimeout = false
+        }
+    }
+
+    LaunchedEffect(connectingMac) {
+        if (connectingMac != null) {
+            kotlinx.coroutines.delay(10000)
+            if (!state.connected) {
+                connectionTimeout = true
+            }
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -83,19 +102,18 @@ fun PairingScreen(
         }
     }
 
-    Surface(
+    Scaffold(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
-                .padding(24.dp),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header
-            Spacer(modifier = Modifier.height(32.dp))
+            // Spacer to pad below any top bar (or just top safe area)
+            Spacer(modifier = Modifier.height(innerPadding.calculateTopPadding() + 16.dp))
             Text(
                 text = "LibreCans",
                 style = MaterialTheme.typography.headlineMedium,
@@ -165,7 +183,8 @@ fun PairingScreen(
                         .padding(bottom = 8.dp)
                 )
 
-                if (state.connecting) {
+                val isEffectivelyConnecting = state.connecting || connectingMac != null
+                if (isEffectivelyConnecting && !connectionTimeout) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -180,6 +199,28 @@ fun PairingScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                    }
+                } else if (connectionTimeout) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "Couldn't connect, try again.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = {
+                                connectionTimeout = false
+                                connectingMac = null
+                            }) {
+                                Text("Retry")
+                            }
                         }
                     }
                 } else {
@@ -201,13 +242,16 @@ fun PairingScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 24.dp)
                         ) {
                             items(pairedDevices) { device ->
                                 DeviceItemRow(device = device) {
                                     if (state.connected && state.deviceMac == device.address) {
                                         onNavigateToMain()
-                                    } else if (!state.connecting) {
+                                    } else if (!isEffectivelyConnecting) {
+                                        connectingMac = device.address
+                                        connectionTimeout = false
                                         viewModel.connectDevice(device.address)
                                     }
                                 }

@@ -54,11 +54,11 @@ fun DebugLogScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(innerPadding.calculateTopPadding()))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -119,9 +119,14 @@ fun DebugLogScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 16.dp,
+                            bottom = innerPadding.calculateBottomPadding() + 24.dp
+                        )
                     ) {
                         items(logs.reversed()) { logEntry ->
                             Text(
@@ -139,7 +144,6 @@ fun DebugLogScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }

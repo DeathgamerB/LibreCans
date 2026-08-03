@@ -15,6 +15,7 @@ data class BluetoothDeviceState(
     val ambientSoundControl: Boolean = false,
     val asmLevel: Int = 20,
     val focusOnVoice: Boolean = false,
+    val storedAsmLevel: Int = 20, // To restore when toggling from NC to Ambient
     val focusOnVoiceAvailable: Boolean = true,
 
     // Battery Levels

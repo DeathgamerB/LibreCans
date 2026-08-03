@@ -69,7 +69,7 @@ fun AncAmbientControl(
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        val targetLevel = if (state.asmLevel > 0) state.asmLevel else 20
+                        val targetLevel = if (state.asmLevel > 0) state.asmLevel else state.storedAsmLevel
                         val targetFocus = if (targetLevel < 3) false else state.focusOnVoice
                         onSetAmbientMode(true, targetLevel, targetFocus, true)
                     },
@@ -164,55 +164,36 @@ fun AncAmbientControl(
                     if (state.isFocusOnVoiceAvailable) {
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        AnimatedVisibility(
-                            visible = state.asmLevel >= 3,
-                            enter = expandVertically(),
-                            exit = shrinkVertically()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Focus on Voice",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "Enhance voices while filtering noise",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Switch(
-                                    checked = state.focusOnVoice,
-                                    onCheckedChange = { checked ->
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        val targetLevel = if (checked && state.asmLevel < 3) 3 else state.asmLevel
-                                        onSetAmbientMode(true, targetLevel, checked, true)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                        checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
-                                    )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Focus on Voice",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Enhance voices while filtering noise",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                        }
-
-                        AnimatedVisibility(
-                            visible = state.asmLevel < 3,
-                            enter = expandVertically(),
-                            exit = shrinkVertically()
-                        ) {
-                            Text(
-                                text = "Focus on Voice is unavailable below level 3",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                modifier = Modifier.padding(top = 4.dp)
+                            Switch(
+                                checked = state.focusOnVoice,
+                                onCheckedChange = { checked ->
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    val targetLevel = if (checked && state.asmLevel < 3) 3 else state.asmLevel
+                                    onSetAmbientMode(true, targetLevel, checked, true)
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
                             )
                         }
                     }
