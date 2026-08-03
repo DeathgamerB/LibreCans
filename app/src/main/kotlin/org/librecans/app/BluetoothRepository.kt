@@ -156,7 +156,7 @@ class BluetoothRepository(private val context: Context) {
 
             val startTime = System.currentTimeMillis()
             var attempt = 1
-            while (connectedSocket == null && (System.currentTimeMillis() - startTime) < 10000) {
+            while (connectedSocket == null && (System.currentTimeMillis() - startTime) < 15000) {
                 Log.d(TAG, "Connection attempt $attempt...")
                 DebugLogger.log(context, "BluetoothRepository", "Connection attempt $attempt for $macAddress")
 
@@ -185,7 +185,7 @@ class BluetoothRepository(private val context: Context) {
 
                 if (connectedSocket == null) {
                     attempt++
-                    delay(500) // Wait 500ms before retrying
+                    delay(1500) // Wait 1.5s before retrying
                 }
             }
 
@@ -224,16 +224,40 @@ class BluetoothRepository(private val context: Context) {
         }
     }
 
-    private fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
+    private suspend fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
         val uuid = UUID.fromString(uuidStr)
         var sock: BluetoothSocket? = null
         DebugLogger.log(context, "BluetoothRepository", "tryConnectSocket to UUID $uuidStr")
         return try {
             sock = device.createRfcommSocketToServiceRecord(uuid)
-            sock.connect()
+            withContext(Dispatchers.IO) {
+                withTimeoutOrNull(1000) {
+                    suspendCancellableCoroutine<Unit> { cont ->
+                        cont.invokeOnCancellation {
+                            try {
+                                sock.close()
+                            } catch (e: IOException) {
+                                // Ignore
+                            }
+                        }
+
+                        try {
+                            sock.connect()
+                            if (cont.isActive) {
+                                cont.resumeWith(Result.success(Unit))
+                            }
+                        } catch (e: IOException) {
+                            if (cont.isActive) {
+                                cont.resumeWith(Result.failure(e))
+                            }
+                        }
+                    }
+                }
+            } ?: throw IOException("Socket connection timed out")
+
             DebugLogger.log(context, "BluetoothRepository", "RFCOMM socket connect successful to UUID $uuidStr")
             sock
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             Log.w(TAG, "Connection failed to UUID $uuidStr: ${e.message}")
             DebugLogger.log(context, "BluetoothRepository", "Connection failed to UUID $uuidStr: ${e.message}")
             try {
