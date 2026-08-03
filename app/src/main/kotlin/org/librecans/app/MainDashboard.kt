@@ -60,8 +60,6 @@ fun MainDashboard(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(innerPadding.calculateTopPadding()))
-
             // Hero Image and Battery
             DeviceHeroCard(state = state)
 
