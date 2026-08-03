@@ -45,7 +45,7 @@ fun MainDashboard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Hero Image and Battery
-            DeviceHeroCard(state = state)
+            DeviceHeroCard(state = state, scrollValue = scrollState.value)
 
             // ANC/Ambient Controls Card
             AncAmbientControl(

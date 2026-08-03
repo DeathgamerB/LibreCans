@@ -274,17 +274,19 @@ fun DetailRow(label: String, value: String) {
 }
 
 @Composable
-fun DeviceHeroCard(state: BluetoothDeviceState) {
+fun DeviceHeroCard(state: BluetoothDeviceState, scrollValue: Int) {
     // Hero Image and Battery Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
+            val imageScale = (1f - (scrollValue / 800f)).coerceIn(0.5f, 1f)
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
+                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp, top = 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Premium Generic Headphone Artwork
@@ -293,7 +295,7 @@ fun DeviceHeroCard(state: BluetoothDeviceState) {
                     painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
                     contentDescription = if (isTWS) "Earbuds" else "Headphones",
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)
+                        .fillMaxWidth(imageScale)
                         .aspectRatio(1f),
                     contentScale = ContentScale.Fit
                 )
