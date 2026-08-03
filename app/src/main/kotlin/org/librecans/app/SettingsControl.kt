@@ -29,7 +29,13 @@ import androidx.compose.ui.layout.ContentScale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsControl(
-    state: BluetoothDeviceState,
+    dsee: Boolean,
+    hasAutoPowerOff: Boolean,
+    autoPowerOff: Int,
+    hasSpeakToChat: Boolean,
+    speakToChat: Boolean,
+    hasAdaptiveVolume: Boolean,
+    adaptiveVolume: Boolean,
     onSetDsee: (Boolean) -> Unit,
     onSetAutoPowerOff: (Int) -> Unit,
     onSetSpeakToChat: (Boolean) -> Unit,
@@ -109,7 +115,7 @@ fun SettingsControl(
                                 )
                             }
                             Switch(
-                                checked = state.dsee,
+                                checked = dsee,
                             onCheckedChange = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onSetDsee(it)
@@ -118,7 +124,7 @@ fun SettingsControl(
                         }
 
                         // Auto Power-Off (Capability-gated)
-                        if (state.hasAutoPowerOff) {
+                        if (hasAutoPowerOff) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
                             var expanded by remember { mutableStateOf(false) }
 
@@ -141,7 +147,7 @@ fun SettingsControl(
                                 }
                                 Box {
                                     Text(
-                                        text = apoOptions.getOrElse(state.autoPowerOff) { "Off" },
+                                        text = apoOptions.getOrElse(autoPowerOff) { "Off" },
                                         style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary,
@@ -170,7 +176,7 @@ fun SettingsControl(
                         }
 
                         // Speak-to-Chat (Capability-gated)
-                        if (state.hasSpeakToChat) {
+                        if (hasSpeakToChat) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -190,7 +196,7 @@ fun SettingsControl(
                                     )
                                 }
                                 Switch(
-                                    checked = state.speakToChat,
+                                    checked = speakToChat,
                                 onCheckedChange = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onSetSpeakToChat(it)
@@ -200,7 +206,7 @@ fun SettingsControl(
                         }
 
                         // Adaptive Volume (Capability-gated)
-                        if (state.hasAdaptiveVolume) {
+                        if (hasAdaptiveVolume) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -220,7 +226,7 @@ fun SettingsControl(
                                     )
                                 }
                                 Switch(
-                                    checked = state.adaptiveVolume,
+                                    checked = adaptiveVolume,
                                 onCheckedChange = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onSetAdaptiveVolume(it)
@@ -274,7 +280,16 @@ fun DetailRow(label: String, value: String) {
 }
 
 @Composable
-fun DeviceHeroCard(state: BluetoothDeviceState) {
+fun DeviceHeroCard(
+    deviceName: String,
+    deviceMac: String,
+    hasDualBattery: Boolean,
+    batteryLevel: Int,
+    batteryCharging: Boolean,
+    batteryLeft: Int,
+    batteryRight: Int,
+    batteryCase: Int
+) {
     // Hero Image and Battery Card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -288,7 +303,7 @@ fun DeviceHeroCard(state: BluetoothDeviceState) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Premium Generic Headphone Artwork
-                val isTWS = state.deviceName.startsWith("WF-", ignoreCase = true) || state.deviceName.contains("LinkBuds", ignoreCase = true)
+                val isTWS = deviceName.startsWith("WF-", ignoreCase = true) || deviceName.contains("LinkBuds", ignoreCase = true)
                 Image(
                     painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
                     contentDescription = if (isTWS) "Earbuds" else "Headphones",
@@ -302,12 +317,12 @@ fun DeviceHeroCard(state: BluetoothDeviceState) {
 
                 // Model name & mac
                 Text(
-                    text = state.deviceName,
+                    text = deviceName,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black
                 )
                 Text(
-                    text = state.deviceMac,
+                    text = deviceMac,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -315,15 +330,15 @@ fun DeviceHeroCard(state: BluetoothDeviceState) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Battery indicators
-                if (state.hasDualBattery) {
+                if (hasDualBattery) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        BatteryIndicator(label = "Left Bud", percent = state.batteryLeft)
-                        BatteryIndicator(label = "Right Bud", percent = state.batteryRight)
-                        if (state.batteryCase >= 0) {
-                            BatteryIndicator(label = "Case", percent = state.batteryCase)
+                        BatteryIndicator(label = "Left Bud", percent = batteryLeft)
+                        BatteryIndicator(label = "Right Bud", percent = batteryRight)
+                        if (batteryCase >= 0) {
+                            BatteryIndicator(label = "Case", percent = batteryCase)
                         }
                     }
                 } else {
@@ -338,12 +353,12 @@ fun DeviceHeroCard(state: BluetoothDeviceState) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = if (state.batteryLevel >= 0) "${state.batteryLevel}%" else "Unknown",
+                            text = if (batteryLevel >= 0) "${batteryLevel}%" else "Unknown",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        if (state.batteryCharging) {
+                        if (batteryCharging) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "⚡ Charging",
@@ -361,7 +376,14 @@ fun DeviceHeroCard(state: BluetoothDeviceState) {
 }
 
 @Composable
-fun HardwareInformationCard(state: BluetoothDeviceState) {
+fun HardwareInformationCard(
+    deviceMac: String,
+    protocolVersion: org.librecans.protocol.SonyProtocolVersion?,
+    hasFirmware: Boolean,
+    firmware: String,
+    hasCodec: Boolean,
+    codec: String
+) {
         var isHardwareExpanded by remember { mutableStateOf(false) }
 
         // Hardware details / Readout Card
@@ -406,11 +428,12 @@ fun HardwareInformationCard(state: BluetoothDeviceState) {
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Spacer(modifier = Modifier.height(4.dp))
-                        DetailRow(label = "Codec", value = if (state.hasCodec) state.codec else "SBC")
-                        DetailRow(label = "Firmware", value = if (state.hasFirmware) state.firmware else "1.0.0")
+                        DetailRow(label = "MAC Address", value = deviceMac)
+                        DetailRow(label = "Codec", value = if (hasCodec) codec else "SBC")
+                        DetailRow(label = "Firmware", value = if (hasFirmware) firmware else "1.0.0")
                         DetailRow(
                             label = "Protocol Version",
-                            value = if (state.protocolVersion != null) state.protocolVersion.name else "Unknown"
+                            value = if (protocolVersion != null) protocolVersion.name else "Unknown"
                         )
                     }
                 }

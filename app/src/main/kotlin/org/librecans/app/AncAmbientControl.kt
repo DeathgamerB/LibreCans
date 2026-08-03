@@ -19,7 +19,10 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun AncAmbientControl(
-    state: BluetoothDeviceState,
+    ambientSoundControl: Boolean,
+    asmLevel: Int,
+    focusOnVoice: Boolean,
+    isFocusOnVoiceAvailable: Boolean,
     onSetAmbientMode: (controlOn: Boolean, level: Int, focusVoice: Boolean, sendWrite: Boolean) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -44,9 +47,9 @@ fun AncAmbientControl(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val isNc = state.ambientSoundControl && state.asmLevel == 0
-                val isAmbient = state.ambientSoundControl && state.asmLevel > 0
-                val isOff = !state.ambientSoundControl
+                val isNc = remember(ambientSoundControl, asmLevel) { ambientSoundControl && asmLevel == 0 }
+                val isAmbient = remember(ambientSoundControl, asmLevel) { ambientSoundControl && asmLevel > 0 }
+                val isOff = remember(ambientSoundControl) { !ambientSoundControl }
 
                 val ncInteraction = remember { MutableInteractionSource() }
                 Button(
@@ -74,8 +77,8 @@ fun AncAmbientControl(
                         val prefs = context.getSharedPreferences("librecans_ambient_prefs", android.content.Context.MODE_PRIVATE)
                         val storedLevel = prefs.getInt("ambient_sound_level", 20)
                         val storedFocus = prefs.getBoolean("focus_on_voice", false)
-                        val targetLevel = if (state.asmLevel > 0) state.asmLevel else storedLevel
-                        val targetFocus = if (targetLevel < 3) false else if (state.asmLevel > 0) state.focusOnVoice else storedFocus
+                        val targetLevel = if (asmLevel > 0) asmLevel else storedLevel
+                        val targetFocus = if (targetLevel < 3) false else if (asmLevel > 0) focusOnVoice else storedFocus
                         onSetAmbientMode(true, targetLevel, targetFocus, true)
                     },
                     interactionSource = ambientInteraction,
@@ -110,7 +113,7 @@ fun AncAmbientControl(
             }
 
             // Slider for Ambient Sound Level (only shown when Ambient is selected)
-            val showSlider = state.ambientSoundControl && state.asmLevel > 0
+            val showSlider = remember(ambientSoundControl, asmLevel) { ambientSoundControl && asmLevel > 0 }
             AnimatedVisibility(
                 visible = showSlider,
                 enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium)),
@@ -121,7 +124,7 @@ fun AncAmbientControl(
                         .fillMaxWidth()
                         .padding(top = 20.dp)
                 ) {
-                    var sliderValue by remember(state.asmLevel) { mutableStateOf(state.asmLevel.toFloat()) }
+                    var sliderValue by remember(asmLevel) { mutableStateOf(asmLevel.toFloat()) }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -148,13 +151,13 @@ fun AncAmbientControl(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             }
                             sliderValue = level
-                            val targetFocus = if (intLevel < 3) false else state.focusOnVoice
+                            val targetFocus = if (intLevel < 3) false else focusOnVoice
                             // Update local state optimistic without network
                             onSetAmbientMode(true, intLevel, targetFocus, false)
                         },
                         onValueChangeFinished = {
                             val intLevel = kotlin.math.round(sliderValue).toInt()
-                            val targetFocus = if (intLevel < 3) false else state.focusOnVoice
+                            val targetFocus = if (intLevel < 3) false else focusOnVoice
                             onSetAmbientMode(true, intLevel, targetFocus, true)
                         },
                         valueRange = 1f..20f,
@@ -166,11 +169,11 @@ fun AncAmbientControl(
                     )
 
                     // Focus on Voice Toggle (Gated behind availability check)
-                    if (state.isFocusOnVoiceAvailable) {
+                    if (isFocusOnVoiceAvailable) {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         AnimatedVisibility(
-                            visible = state.asmLevel >= 3,
+                            visible = asmLevel >= 3,
                             enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium)),
                             exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium))
                         ) {
@@ -192,10 +195,10 @@ fun AncAmbientControl(
                                     )
                                 }
                                 Switch(
-                                    checked = state.focusOnVoice,
+                                    checked = focusOnVoice,
                                     onCheckedChange = { checked ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        val targetLevel = if (checked && state.asmLevel < 3) 3 else state.asmLevel
+                                        val targetLevel = if (checked && asmLevel < 3) 3 else asmLevel
                                         onSetAmbientMode(true, targetLevel, checked, true)
                                     },
                                     colors = SwitchDefaults.colors(
@@ -209,7 +212,7 @@ fun AncAmbientControl(
                         }
 
                         AnimatedVisibility(
-                            visible = state.asmLevel < 3,
+                            visible = asmLevel < 3,
                             enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium)),
                             exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium))
                         ) {

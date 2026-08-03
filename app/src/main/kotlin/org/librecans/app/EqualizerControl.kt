@@ -28,27 +28,31 @@ import org.librecans.protocol.EqPreset
 
 @Composable
 fun EqualizerControl(
-    state: BluetoothDeviceState,
+    eqPreset: EqPreset,
+    eqClearBass: Int,
+    eqBands: List<Int>,
     onSetPreset: (EqPreset) -> Unit,
     onSetCustomEq: (clearBass: Int, bands: List<Int>, sendWrite: Boolean) -> Unit
 ) {
     var isSlidersExpanded by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
-    val presets = listOf(
-        Pair("Off", EqPreset.OFF),
-        Pair("Bright", EqPreset.BRIGHT),
-        Pair("Excited", EqPreset.EXCITED),
-        Pair("Mellow", EqPreset.MELLOW),
-        Pair("Relaxed", EqPreset.RELAXED),
-        Pair("Vocal", EqPreset.VOCAL),
-        Pair("Treble", EqPreset.TREBLE_BOOST),
-        Pair("Bass", EqPreset.BASS_BOOST),
-        Pair("Speech", EqPreset.SPEECH),
-        Pair("Manual", EqPreset.MANUAL)
-    )
+    val presets = remember {
+        listOf(
+            Pair("Off", EqPreset.OFF),
+            Pair("Bright", EqPreset.BRIGHT),
+            Pair("Excited", EqPreset.EXCITED),
+            Pair("Mellow", EqPreset.MELLOW),
+            Pair("Relaxed", EqPreset.RELAXED),
+            Pair("Vocal", EqPreset.VOCAL),
+            Pair("Treble", EqPreset.TREBLE_BOOST),
+            Pair("Bass", EqPreset.BASS_BOOST),
+            Pair("Speech", EqPreset.SPEECH),
+            Pair("Manual", EqPreset.MANUAL)
+        )
+    }
 
-    val bandLabels = listOf("400Hz", "1kHz", "2.5kHz", "6.3kHz", "16kHz")
+    val bandLabels = remember { listOf("400Hz", "1kHz", "2.5kHz", "6.3kHz", "16kHz") }
 
     Card(
         modifier = Modifier.fillMaxWidth().animateContentSize(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium)),
@@ -84,12 +88,12 @@ fun EqualizerControl(
             ) {
                 items(presets) { (label, preset) ->
                     val isSelected = if (preset == EqPreset.MANUAL) {
-                        state.eqPreset == EqPreset.MANUAL ||
-                        state.eqPreset == EqPreset.MANUAL_V2 ||
-                        state.eqPreset == EqPreset.CUSTOM_1 ||
-                        state.eqPreset == EqPreset.CUSTOM_2
+                        eqPreset == EqPreset.MANUAL ||
+                        eqPreset == EqPreset.MANUAL_V2 ||
+                        eqPreset == EqPreset.CUSTOM_1 ||
+                        eqPreset == EqPreset.CUSTOM_2
                     } else {
-                        state.eqPreset == preset
+                        eqPreset == preset
                     }
                     val chipInteractionSource = remember { MutableInteractionSource() }
                     val chipShape = if (isSelected) {
@@ -126,10 +130,10 @@ fun EqualizerControl(
             }
 
             // Manual band sliders (shown when MANUAL or V2 custom presets are selected)
-            val isCustomPresetActive = state.eqPreset == EqPreset.MANUAL ||
-                              state.eqPreset == EqPreset.MANUAL_V2 ||
-                              state.eqPreset == EqPreset.CUSTOM_1 ||
-                              state.eqPreset == EqPreset.CUSTOM_2
+            val isCustomPresetActive = remember(eqPreset) { eqPreset == EqPreset.MANUAL ||
+                              eqPreset == EqPreset.MANUAL_V2 ||
+                              eqPreset == EqPreset.CUSTOM_1 ||
+                              eqPreset == EqPreset.CUSTOM_2 }
                 AnimatedVisibility(visible = isCustomPresetActive) {
                 Row(
                     modifier = Modifier
@@ -168,7 +172,7 @@ fun EqualizerControl(
                     // 5 frequency bands
                     for (i in 0 until 5) {
                         val label = bandLabels[i]
-                        val bandValue = state.eqBands.getOrElse(i) { 0 }
+                        val bandValue = eqBands.getOrElse(i) { 0 }
                         var sliderValue by remember(bandValue) { mutableStateOf(bandValue.toFloat()) }
 
                         Row(
@@ -191,17 +195,17 @@ fun EqualizerControl(
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     }
                                     sliderValue = newValue
-                                    val newBands = state.eqBands.toMutableList()
+                                    val newBands = eqBands.toMutableList()
                                     while (newBands.size < 5) newBands.add(0)
                                     newBands[i] = intValue
-                                    onSetCustomEq(state.eqClearBass, newBands, false)
+                                    onSetCustomEq(eqClearBass, newBands, false)
                                 },
                                 onValueChangeFinished = {
                                     val intValue = sliderValue.roundToInt().coerceIn(-10, 10)
-                                    val newBands = state.eqBands.toMutableList()
+                                    val newBands = eqBands.toMutableList()
                                     while (newBands.size < 5) newBands.add(0)
                                     newBands[i] = intValue
-                                    onSetCustomEq(state.eqClearBass, newBands, true)
+                                    onSetCustomEq(eqClearBass, newBands, true)
                                 },
                                 valueRange = -10f..10f,
                                 steps = 19,
@@ -220,7 +224,7 @@ fun EqualizerControl(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Clear Bass Slider
-                    var cbSliderValue by remember(state.eqClearBass) { mutableStateOf(state.eqClearBass.toFloat()) }
+                    var cbSliderValue by remember(eqClearBass) { mutableStateOf(eqClearBass.toFloat()) }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -242,10 +246,10 @@ fun EqualizerControl(
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 }
                                 cbSliderValue = newValue
-                                onSetCustomEq(intValue, state.eqBands, false)
+                                onSetCustomEq(intValue, eqBands, false)
                             },
                             onValueChangeFinished = {
-                                onSetCustomEq(cbSliderValue.roundToInt(), state.eqBands, true)
+                                onSetCustomEq(cbSliderValue.roundToInt(), eqBands, true)
                             },
                             valueRange = -10f..10f,
                             steps = 19,
