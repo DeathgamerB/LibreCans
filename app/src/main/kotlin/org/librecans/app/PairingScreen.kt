@@ -70,7 +70,7 @@ fun PairingScreen(
     var pressedMock by remember { mutableStateOf(false) }
     val mockScale by animateFloatAsState(
         targetValue = if (pressedMock) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium),
         label = "MockScale"
     )
 
