@@ -12,6 +12,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
+
+
+val LocalScrollValue = compositionLocalOf<() -> Int> { { 0 } }
+
+@Composable
+fun OverlayLayout(topBar: @Composable () -> Unit, content: @Composable (Dp) -> Unit) {
+    val density = LocalDensity.current
+    SubcomposeLayout { constraints ->
+        val topBarPlaceables = subcompose("topBar", topBar).map { it.measure(constraints) }
+        val topPadding = if (topBarPlaceables.isNotEmpty()) with(density) { topBarPlaceables.maxOf { it.height }.toDp() } else 0.dp
+        val contentPlaceables = subcompose("content") { content(topPadding) }.map { it.measure(constraints) }
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            contentPlaceables.forEach { it.placeRelative(0, 0) }
+            topBarPlaceables.forEach { it.placeRelative(0, 0) }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +50,7 @@ fun MainDashboard(
         }
     }
 
-    Scaffold(
+    OverlayLayout(
         topBar = {
             TopAppBar(
                 title = {
@@ -46,18 +66,19 @@ fun MainDashboard(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
                 )
             )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 20.dp)
-                .verticalScroll(scrollState)
-                .padding(top = innerPadding.calculateTopPadding() * 0.6f, bottom = innerPadding.calculateBottomPadding()),
+        },
+        content = { topPadding ->
+            CompositionLocalProvider(LocalScrollValue provides { scrollState.value }) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(horizontal = 20.dp)
+                        .verticalScroll(scrollState)
+                        .padding(top = topPadding * 0.6f, bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -161,6 +182,7 @@ fun MainDashboard(
                     color = MaterialTheme.colorScheme.onError
                 )
             }
+            }
         }
-    }
+    })
 }
