@@ -3,6 +3,7 @@ package org.librecans.app
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +24,7 @@ fun AncAmbientControl(
 ) {
     val haptic = LocalHapticFeedback.current
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().animateContentSize(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -66,10 +67,13 @@ fun AncAmbientControl(
                 }
 
                 val ambientInteraction = remember { MutableInteractionSource() }
+                val context = androidx.compose.ui.platform.LocalContext.current
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        val targetLevel = if (state.asmLevel > 0) state.asmLevel else 20
+                        val prefs = context.getSharedPreferences("librecans_ambient_prefs", android.content.Context.MODE_PRIVATE)
+                        val storedLevel = prefs.getInt("ambient_sound_level", 20)
+                        val targetLevel = if (state.asmLevel > 0) state.asmLevel else storedLevel
                         val targetFocus = if (targetLevel < 3) false else state.focusOnVoice
                         onSetAmbientMode(true, targetLevel, targetFocus, true)
                     },
@@ -108,8 +112,8 @@ fun AncAmbientControl(
             val showSlider = state.ambientSoundControl && state.asmLevel > 0
             AnimatedVisibility(
                 visible = showSlider,
-                enter = expandVertically(),
-                exit = shrinkVertically()
+                enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)),
+                exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow))
             ) {
                 Column(
                     modifier = Modifier
@@ -166,8 +170,8 @@ fun AncAmbientControl(
 
                         AnimatedVisibility(
                             visible = state.asmLevel >= 3,
-                            enter = expandVertically(),
-                            exit = shrinkVertically()
+                            enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)),
+                            exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow))
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -205,8 +209,8 @@ fun AncAmbientControl(
 
                         AnimatedVisibility(
                             visible = state.asmLevel < 3,
-                            enter = expandVertically(),
-                            exit = shrinkVertically()
+                            enter = androidx.compose.animation.expandVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)),
+                            exit = androidx.compose.animation.shrinkVertically(animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow))
                         ) {
                             Text(
                                 text = "Focus on Voice is unavailable below level 3",

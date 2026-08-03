@@ -13,6 +13,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -168,30 +169,14 @@ fun PairingScreen(
                         .padding(bottom = 8.dp)
                 )
 
-                if (state.connecting) {
-                    Box(
-                        modifier = Modifier
-                            .testTag("loading_state")
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                "Connecting to headset...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
                     if (pairedDevices.isEmpty()) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -204,8 +189,7 @@ fun PairingScreen(
                         LazyColumn(
                             modifier = Modifier
                                 .testTag("device_list")
-                                .fillMaxWidth()
-                                .weight(1f),
+                                .fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(pairedDevices) { device ->
@@ -216,6 +200,26 @@ fun PairingScreen(
                                         viewModel.connectDevice(device.address)
                                     }
                                 }
+                            }
+                        }
+                    }
+
+                    if (state.connecting) {
+                        Box(
+                            modifier = Modifier
+                                .testTag("loading_state")
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.8f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    "Connecting to headset...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
