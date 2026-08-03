@@ -193,33 +193,16 @@ fun PairingScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(pairedDevices) { device ->
-                                DeviceItemRow(device = device) {
+                                DeviceItemRow(
+                                    device = device,
+                                    isConnecting = state.connecting && state.deviceMac == device.address
+                                ) {
                                     if (state.connected && state.deviceMac == device.address) {
                                         onNavigateToMain()
                                     } else if (!state.connecting) {
                                         viewModel.connectDevice(device.address)
                                     }
                                 }
-                            }
-                        }
-                    }
-
-                    if (state.connecting) {
-                        Box(
-                            modifier = Modifier
-                                .testTag("loading_state")
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.8f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    "Connecting to headset...",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
                         }
                     }
@@ -285,6 +268,7 @@ fun PairingScreen(
 @Composable
 fun DeviceItemRow(
     device: BluetoothDevice,
+    isConnecting: Boolean = false,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -325,6 +309,17 @@ fun DeviceItemRow(
                     text = device.address,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (isConnecting) {
+                Spacer(modifier = Modifier.weight(1f))
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .testTag("loading_state")
+                        .size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
