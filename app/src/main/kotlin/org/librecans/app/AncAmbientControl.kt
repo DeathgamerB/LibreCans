@@ -73,8 +73,9 @@ fun AncAmbientControl(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         val prefs = context.getSharedPreferences("librecans_ambient_prefs", android.content.Context.MODE_PRIVATE)
                         val storedLevel = prefs.getInt("ambient_sound_level", 20)
+                        val storedFocus = prefs.getBoolean("focus_on_voice", false)
                         val targetLevel = if (state.asmLevel > 0) state.asmLevel else storedLevel
-                        val targetFocus = if (targetLevel < 3) false else state.focusOnVoice
+                        val targetFocus = if (targetLevel < 3) false else if (state.asmLevel > 0) state.focusOnVoice else storedFocus
                         onSetAmbientMode(true, targetLevel, targetFocus, true)
                     },
                     interactionSource = ambientInteraction,
