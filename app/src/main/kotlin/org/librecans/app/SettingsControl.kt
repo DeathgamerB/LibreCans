@@ -328,7 +328,7 @@ fun DeviceHeroCard(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Battery indicators
-                if (hasDualBattery) {
+                if (isTWS) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
