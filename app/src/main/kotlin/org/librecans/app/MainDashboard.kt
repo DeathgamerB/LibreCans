@@ -61,7 +61,6 @@ fun MainDashboard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.padding(innerPadding).safeDrawingPadding())
-            Spacer(modifier = Modifier.height(4.dp))
 
             // Hero Image and Battery
             DeviceHeroCard(state = state)
@@ -119,6 +118,9 @@ fun MainDashboard(
                 onSetAdaptiveVolume = { viewModel.setAdaptiveVolume(it) }
             )
 
+            // Hardware Information Card
+            HardwareInformationCard(state = state)
+
             // Disconnect Button
             Button(
                 onClick = { viewModel.disconnectDevice() },
@@ -135,7 +137,6 @@ fun MainDashboard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
             Spacer(modifier = Modifier.padding(innerPadding).safeDrawingPadding())
         }
     }
