@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onSizeChanged
 
-val LocalScrollValue = compositionLocalOf { 0 }
+val LocalScrollValue = compositionLocalOf<() -> Int> { { 0 } }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +38,7 @@ fun MainDashboard(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        CompositionLocalProvider(LocalScrollValue provides scrollState.value) {
+        CompositionLocalProvider(LocalScrollValue provides { scrollState.value }) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

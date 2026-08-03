@@ -293,7 +293,8 @@ fun DeviceHeroCard(
     batteryRight: Int,
     batteryCase: Int
 ) {
-    val scrollValue = LocalScrollValue.current
+    val scrollValueProvider = LocalScrollValue.current
+    val scrollValue = scrollValueProvider()
     val dynamicScale = (1f - (scrollValue / with(LocalDensity.current) { 400.dp.toPx() })).coerceIn(0.5f, 1f)
     // Hero Image and Battery Card
         Card(

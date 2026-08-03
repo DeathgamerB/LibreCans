@@ -25,9 +25,8 @@ fun AboutScreen(
     val scrollState = rememberScrollState()
     var isDebugEnabled by remember { mutableStateOf(DebugLogger.isDebugMode) }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    Box(
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
