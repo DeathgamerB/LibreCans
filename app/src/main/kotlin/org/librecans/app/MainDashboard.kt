@@ -55,13 +55,12 @@ fun MainDashboard(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding)
-                .safeDrawingPadding()
                 .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.padding(innerPadding).safeDrawingPadding())
             Spacer(modifier = Modifier.height(4.dp))
 
             // Hero Image and Battery
@@ -137,6 +136,7 @@ fun MainDashboard(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.padding(innerPadding).safeDrawingPadding())
         }
     }
 }

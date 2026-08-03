@@ -43,36 +43,8 @@ fun SettingsControl(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Hardware details / Readout Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Text(
-                    text = "Hardware Information",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-
-                DetailRow(label = "Codec", value = if (state.hasCodec) state.codec else "SBC")
-                DetailRow(label = "Firmware", value = if (state.hasFirmware) state.firmware else "1.0.0")
-                DetailRow(
-                    label = "Protocol Version",
-                    value = if (state.protocolVersion != null) state.protocolVersion.name else "Unknown"
-                )
-            }
-        }
-
         var isFeaturesExpanded by remember { mutableStateOf(false) }
-
-        // Settings Controls (Capability-gated extras)
+        // Hardware details / Readout Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -381,5 +353,59 @@ fun DeviceHeroCard(state: BluetoothDeviceState) {
             }
         }
 
+        var isHardwareExpanded by remember { mutableStateOf(false) }
 
-}
+        // Hardware details / Readout Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isHardwareExpanded = !isHardwareExpanded }
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Hardware Information",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = if (isHardwareExpanded) "▲" else "▼",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                AnimatedVisibility(
+                    isHardwareExpanded,
+                    Modifier,
+                    expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)),
+                    shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow))
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        DetailRow(label = "Codec", value = if (state.hasCodec) state.codec else "SBC")
+                        DetailRow(label = "Firmware", value = if (state.hasFirmware) state.firmware else "1.0.0")
+                        DetailRow(
+                            label = "Protocol Version",
+                            value = if (state.protocolVersion != null) state.protocolVersion.name else "Unknown"
+                        )
+                    }
+                }
+            }
+        }
+    }
+

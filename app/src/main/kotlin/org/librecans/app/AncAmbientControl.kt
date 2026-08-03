@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 
 @Composable
 fun AncAmbientControl(
@@ -22,6 +24,7 @@ fun AncAmbientControl(
     onSetAmbientMode: (controlOn: Boolean, level: Int, focusVoice: Boolean, sendWrite: Boolean) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -69,7 +72,9 @@ fun AncAmbientControl(
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        val targetLevel = if (state.asmLevel > 0) state.asmLevel else 20
+                        val prefs = context.getSharedPreferences("librecans_ambient_prefs", Context.MODE_PRIVATE)
+                        val storedLevel = prefs.getInt("ambient_sound_level", 20)
+                        val targetLevel = if (state.asmLevel > 0) state.asmLevel else storedLevel
                         val targetFocus = if (targetLevel < 3) false else state.focusOnVoice
                         onSetAmbientMode(true, targetLevel, targetFocus, true)
                     },
