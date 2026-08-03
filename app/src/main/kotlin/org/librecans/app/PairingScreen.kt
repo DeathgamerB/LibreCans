@@ -20,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -168,6 +169,7 @@ fun PairingScreen(
                 if (state.connecting) {
                     Box(
                         modifier = Modifier
+                            .testTag("loading_state")
                             .fillMaxWidth()
                             .weight(1f),
                         contentAlignment = Alignment.Center
@@ -199,6 +201,7 @@ fun PairingScreen(
                     } else {
                         LazyColumn(
                             modifier = Modifier
+                                .testTag("device_list")
                                 .fillMaxWidth()
                                 .weight(1f),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
