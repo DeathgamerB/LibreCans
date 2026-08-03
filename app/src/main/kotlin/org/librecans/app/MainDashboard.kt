@@ -62,11 +62,23 @@ fun MainDashboard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Hero Image and Battery
-            DeviceHeroCard(state = state)
+            DeviceHeroCard(
+                deviceName = state.deviceName,
+                deviceMac = state.deviceMac,
+                hasDualBattery = state.hasDualBattery,
+                batteryLevel = state.batteryLevel,
+                batteryCharging = state.batteryCharging,
+                batteryLeft = state.batteryLeft,
+                batteryRight = state.batteryRight,
+                batteryCase = state.batteryCase
+            )
 
             // ANC/Ambient Controls Card
             AncAmbientControl(
-                state = state,
+                ambientSoundControl = state.ambientSoundControl,
+                asmLevel = state.asmLevel,
+                focusOnVoice = state.focusOnVoice,
+                isFocusOnVoiceAvailable = state.isFocusOnVoiceAvailable,
                 onSetAmbientMode = { controlOn, level, focusVoice, sendWrite ->
                     viewModel.setAmbientMode(controlOn, level, focusVoice, sendWrite)
                 }
@@ -76,7 +88,9 @@ fun MainDashboard(
             val supportsEq = state.protocolVersion == org.librecans.protocol.SonyProtocolVersion.V2 || viewModel.connectionState.value.deviceName.contains("Mock")
             if (supportsEq) {
                 EqualizerControl(
-                    state = state,
+                    eqPreset = state.eqPreset,
+                    eqClearBass = state.eqClearBass,
+                    eqBands = state.eqBands,
                     onSetPreset = { preset ->
                         viewModel.setEqualizerPreset(preset)
                     },
@@ -110,7 +124,13 @@ fun MainDashboard(
 
             // General Settings Card
             SettingsControl(
-                state = state,
+                dsee = state.dsee,
+                hasAutoPowerOff = state.hasAutoPowerOff,
+                autoPowerOff = state.autoPowerOff,
+                hasSpeakToChat = state.hasSpeakToChat,
+                speakToChat = state.speakToChat,
+                hasAdaptiveVolume = state.hasAdaptiveVolume,
+                adaptiveVolume = state.adaptiveVolume,
                 onSetDsee = { viewModel.setDsee(it) },
                 onSetAutoPowerOff = { viewModel.setAutoPowerOff(it) },
                 onSetSpeakToChat = { viewModel.setSpeakToChat(it) },
@@ -118,7 +138,14 @@ fun MainDashboard(
             )
 
             // Hardware Information Card
-            HardwareInformationCard(state = state)
+            HardwareInformationCard(
+                deviceMac = state.deviceMac,
+                protocolVersion = state.protocolVersion,
+                hasFirmware = state.hasFirmware,
+                firmware = state.firmware,
+                hasCodec = state.hasCodec,
+                codec = state.codec
+            )
 
             // Disconnect Button
             Button(

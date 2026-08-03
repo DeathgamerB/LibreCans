@@ -777,7 +777,7 @@ class BluetoothRepository(private val context: Context) {
 
     fun setAmbientMode(controlOn: Boolean, level: Int, focusVoice: Boolean, sendWrite: Boolean = true) {
         ambientDebounceJob?.cancel()
-        ambientDebounceJob = scope.launch {
+        ambientDebounceJob = scope.launch(Dispatchers.IO) {
             lastAmbientUpdate = System.currentTimeMillis()
             delay(150)
             val state = _deviceState.value
@@ -823,6 +823,7 @@ class BluetoothRepository(private val context: Context) {
     }
 
     fun setEqualizerPreset(preset: EqPreset) {
+        scope.launch(Dispatchers.IO) {
         val isManual = preset == EqPreset.MANUAL ||
                        preset == EqPreset.CUSTOM_1 ||
                        preset == EqPreset.CUSTOM_2
@@ -868,11 +869,12 @@ class BluetoothRepository(private val context: Context) {
                 bytes = bytes
             )
         }
+            }
     }
 
     fun setEqualizerCustom(clearBass: Int, bands: List<Int>, sendWrite: Boolean = true) {
         eqDebounceJob?.cancel()
-        eqDebounceJob = scope.launch {
+        eqDebounceJob = scope.launch(Dispatchers.IO) {
             delay(150)
             val out = java.io.ByteArrayOutputStream()
             out.write(V2Command.EQ_SET.toInt())
@@ -919,6 +921,7 @@ class BluetoothRepository(private val context: Context) {
     }
 
     fun setDsee(enabled: Boolean) {
+        scope.launch(Dispatchers.IO) {
         val bytes = byteArrayOf(
             V2Command.DSEE_SET,
             0x01.toByte(),
@@ -930,10 +933,12 @@ class BluetoothRepository(private val context: Context) {
             },
             bytes = bytes
         )
+            }
     }
 
     fun setAutoPowerOff(index: Int) {
-        if (index !in 0..5) return
+        scope.launch(Dispatchers.IO) {
+        if (index !in 0..5) return@launch
         val codes = arrayOf(
             Pair(0x11, 0x00), // Off
             Pair(0x00, 0x00), // 5 min
@@ -955,9 +960,11 @@ class BluetoothRepository(private val context: Context) {
             },
             bytes = bytes
         )
+            }
     }
 
     fun setSpeakToChat(enabled: Boolean) {
+        scope.launch(Dispatchers.IO) {
         // SET f8 0c <enabled? 0:1> 01 (inverted bit on v2)
         val bytes = byteArrayOf(
             V2Command.BTNMODE_SET,
@@ -971,9 +978,11 @@ class BluetoothRepository(private val context: Context) {
             },
             bytes = bytes
         )
+            }
     }
 
     fun setAdaptiveVolume(enabled: Boolean) {
+        scope.launch(Dispatchers.IO) {
         // SET f8 0a <enabled? 0:1> (inverted)
         val bytes = byteArrayOf(
             V2Command.BTNMODE_SET,
@@ -986,6 +995,7 @@ class BluetoothRepository(private val context: Context) {
             },
             bytes = bytes
         )
+            }
     }
 
     private fun updateError(msg: String) {
