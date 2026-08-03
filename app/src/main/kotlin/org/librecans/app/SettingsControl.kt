@@ -25,6 +25,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalDensity
+import org.librecans.app.LocalScrollValue
 import androidx.compose.ui.layout.ContentScale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -291,6 +293,8 @@ fun DeviceHeroCard(
     batteryRight: Int,
     batteryCase: Int
 ) {
+    val scrollValue = LocalScrollValue.current
+    val dynamicScale = (1f - (scrollValue / with(LocalDensity.current) { 400.dp.toPx() })).coerceIn(0.5f, 1f)
     // Hero Image and Battery Card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -300,7 +304,7 @@ fun DeviceHeroCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
+                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp, top = 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Premium Generic Headphone Artwork
@@ -309,7 +313,7 @@ fun DeviceHeroCard(
                     painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
                     contentDescription = if (isTWS) "Earbuds" else "Headphones",
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)
+                        .fillMaxWidth(dynamicScale)
                         .aspectRatio(1f),
                     contentScale = ContentScale.Fit
                 )

@@ -87,14 +87,13 @@ fun PairingScreen(
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    Box(
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
+                .padding(top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

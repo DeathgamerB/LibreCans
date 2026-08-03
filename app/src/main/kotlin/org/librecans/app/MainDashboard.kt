@@ -12,6 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
+
+val LocalScrollValue = compositionLocalOf { 0 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,6 +27,8 @@ fun MainDashboard(
 ) {
     val state by viewModel.connectionState.collectAsState()
     val scrollState = rememberScrollState()
+    var topBarHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
 
     // If connection is lost, navigate back to pairing screen
     LaunchedEffect(state.connected) {
@@ -30,34 +37,15 @@ fun MainDashboard(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "LibreCans",
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                },
-                actions = {
-                    TextButton(onClick = onNavigateToAbout) {
-                        Text("About", fontWeight = FontWeight.Bold)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 20.dp)
-                .verticalScroll(scrollState)
-                .padding(top = innerPadding.calculateTopPadding() * 0.6f, bottom = innerPadding.calculateBottomPadding()),
+    Box(modifier = Modifier.fillMaxSize()) {
+        CompositionLocalProvider(LocalScrollValue provides scrollState.value) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = 20.dp)
+                    .verticalScroll(scrollState)
+                    .padding(top = (WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + topBarHeight) * 0.6f, bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -162,5 +150,25 @@ fun MainDashboard(
                 )
             }
         }
+        }
+
+        TopAppBar(
+            title = {
+                Text(
+                    "LibreCans",
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
+            actions = {
+                TextButton(onClick = onNavigateToAbout) {
+                    Text("About", fontWeight = FontWeight.Bold)
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = androidx.compose.ui.graphics.Color.Transparent
+            ),
+            modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().onSizeChanged { topBarHeight = with(density) { it.height.toDp() } }
+        )
     }
 }

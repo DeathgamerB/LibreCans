@@ -32,9 +32,9 @@ fun AboutScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
-                .padding(24.dp)
-                .verticalScroll(scrollState),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(scrollState)
+                .padding(top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 24.dp, bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding() + 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
