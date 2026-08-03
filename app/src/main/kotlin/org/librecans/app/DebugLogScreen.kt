@@ -21,8 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.layout.onSizeChanged
+
+
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -31,16 +34,34 @@ fun DebugLogScreen(
 ) {
     val context = LocalContext.current
     var logs by remember { mutableStateOf(DebugLogger.getLogs(context)) }
-    var topBarHeight by remember { mutableStateOf(0.dp) }
-    val density = LocalDensity.current
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 20.dp)
-                .padding(top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + topBarHeight, bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()),
+    OverlayLayout(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Bluetooth Diagnostics",
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                navigationIcon = {
+                    TextButton(onClick = onBack) {
+                        Text("Back", fontWeight = FontWeight.Bold)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        },
+        content = { topPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = 20.dp)
+                    .padding(top = topPadding, bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -126,27 +147,5 @@ fun DebugLogScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
         }
-
-        TopAppBar(
-            title = {
-                Text(
-                    "Bluetooth Diagnostics",
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            },
-            navigationIcon = {
-                TextButton(onClick = onBack) {
-                    Text("Back", fontWeight = FontWeight.Bold)
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent
-            ),
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .statusBarsPadding()
-                .onSizeChanged { topBarHeight = with(density) { it.height.toDp() } }
-        )
-    }
+    })
 }

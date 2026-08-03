@@ -12,11 +12,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.layout.onSizeChanged
+
 
 val LocalScrollValue = compositionLocalOf<() -> Int> { { 0 } }
+
+@Composable
+fun OverlayLayout(topBar: @Composable () -> Unit, content: @Composable (Dp) -> Unit) {
+    val density = LocalDensity.current
+    SubcomposeLayout { constraints ->
+        val topBarPlaceables = subcompose("topBar", topBar).map { it.measure(constraints) }
+        val topPadding = if (topBarPlaceables.isNotEmpty()) with(density) { topBarPlaceables.maxOf { it.height }.toDp() } else 0.dp
+        val contentPlaceables = subcompose("content") { content(topPadding) }.map { it.measure(constraints) }
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            contentPlaceables.forEach { it.placeRelative(0, 0) }
+            topBarPlaceables.forEach { it.placeRelative(0, 0) }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,8 +42,6 @@ fun MainDashboard(
 ) {
     val state by viewModel.connectionState.collectAsState()
     val scrollState = rememberScrollState()
-    var topBarHeight by remember { mutableStateOf(0.dp) }
-    val density = LocalDensity.current
 
     // If connection is lost, navigate back to pairing screen
     LaunchedEffect(state.connected) {
@@ -37,15 +50,35 @@ fun MainDashboard(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        CompositionLocalProvider(LocalScrollValue provides { scrollState.value }) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = 20.dp)
-                    .verticalScroll(scrollState)
-                    .padding(top = (WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + topBarHeight) * 0.6f, bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()),
+    OverlayLayout(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "LibreCans",
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                actions = {
+                    TextButton(onClick = onNavigateToAbout) {
+                        Text("About", fontWeight = FontWeight.Bold)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                )
+            )
+        },
+        content = { topPadding ->
+            CompositionLocalProvider(LocalScrollValue provides { scrollState.value }) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(horizontal = 20.dp)
+                        .verticalScroll(scrollState)
+                        .padding(top = topPadding * 0.6f, bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -149,26 +182,7 @@ fun MainDashboard(
                     color = MaterialTheme.colorScheme.onError
                 )
             }
+            }
         }
-        }
-
-        TopAppBar(
-            title = {
-                Text(
-                    "LibreCans",
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            },
-            actions = {
-                TextButton(onClick = onNavigateToAbout) {
-                    Text("About", fontWeight = FontWeight.Bold)
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = androidx.compose.ui.graphics.Color.Transparent
-            ),
-            modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().onSizeChanged { topBarHeight = with(density) { it.height.toDp() } }
-        )
-    }
+    })
 }

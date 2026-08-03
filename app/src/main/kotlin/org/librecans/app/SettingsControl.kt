@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import org.librecans.app.LocalScrollValue
 import androidx.compose.ui.layout.ContentScale
@@ -294,8 +295,6 @@ fun DeviceHeroCard(
     batteryCase: Int
 ) {
     val scrollValueProvider = LocalScrollValue.current
-    val scrollValue = scrollValueProvider()
-    val dynamicScale = (1f - (scrollValue / with(LocalDensity.current) { 400.dp.toPx() })).coerceIn(0.5f, 1f)
     // Hero Image and Battery Card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -314,7 +313,18 @@ fun DeviceHeroCard(
                     painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
                     contentDescription = if (isTWS) "Earbuds" else "Headphones",
                     modifier = Modifier
-                        .fillMaxWidth(dynamicScale)
+                        .layout { measurable, constraints ->
+                            val scrollValue = scrollValueProvider()
+                            val targetScale = (1f - (scrollValue / (800 * density))).coerceIn(0.5f, 1f)
+                            val newWidth = (constraints.maxWidth * targetScale).toInt()
+                            val placeable = measurable.measure(constraints.copy(
+                                minWidth = newWidth,
+                                maxWidth = newWidth
+                            ))
+                            layout(placeable.width, placeable.height) {
+                                placeable.placeRelative(0, 0)
+                            }
+                        }
                         .aspectRatio(1f),
                     contentScale = ContentScale.Fit
                 )
