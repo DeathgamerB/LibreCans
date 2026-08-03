@@ -57,7 +57,7 @@ fun MainDashboard(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState)
-                .padding(top = innerPadding.calculateTopPadding(), bottom = innerPadding.calculateBottomPadding()),
+                .padding(top = innerPadding.calculateTopPadding() * 0.6f, bottom = innerPadding.calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
