@@ -46,6 +46,7 @@ class BluetoothRepository(private val context: Context) {
     private var pollJob: Job? = null
     private var ambientDebounceJob: Job? = null
     private var eqDebounceJob: Job? = null
+    @Volatile private var lastAmbientUpdate: Long = 0
     private val scope = CoroutineScope(DispatchScope + SupervisorJob())
 
     // Cache of successful protocol versions per MAC address
@@ -327,6 +328,10 @@ class BluetoothRepository(private val context: Context) {
 
         when (op) {
             0x67.toByte() -> { // NCASM STATE RET
+                // Ignore incoming status updates that arrive shortly after an optimistic change
+                if (System.currentTimeMillis() - lastAmbientUpdate < 1500L) {
+                    return
+                }
                 // layout: 67 17 01 <effect> <settingType 0=NC/1=Ambient> <voice> <level>
                 val state = _deviceState.value
                 val isV2 = state.protocolVersion == SonyProtocolVersion.V2
@@ -773,6 +778,7 @@ class BluetoothRepository(private val context: Context) {
     fun setAmbientMode(controlOn: Boolean, level: Int, focusVoice: Boolean, sendWrite: Boolean = true) {
         ambientDebounceJob?.cancel()
         ambientDebounceJob = scope.launch {
+            lastAmbientUpdate = System.currentTimeMillis()
             delay(150)
             val state = _deviceState.value
             val usedLevel = if (level > 0) level else 1
