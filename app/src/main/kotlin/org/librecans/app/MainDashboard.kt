@@ -58,7 +58,7 @@ fun MainDashboard(
                     batteryCase = state.batteryCase
                 )
 
-            // ANC/Ambient Controls Card
+                // ANC/Ambient Controls Card
             AncAmbientControl(
                 state = state,
                 onSetAmbientMode = { controlOn, level, focusVoice, sendWrite ->

@@ -1,0 +1,175 @@
+--- app/src/main/kotlin/org/librecans/app/MainDashboard.kt
++++ app/src/main/kotlin/org/librecans/app/MainDashboard.kt
+@@ -12,6 +12,8 @@
+ import androidx.compose.ui.text.font.FontWeight
+ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.unit.sp
++
++val LocalScrollValue = compositionLocalOf { 0 }
+
+ @OptIn(ExperimentalMaterial3Api::class)
+ @Composable
+@@ -31,34 +33,18 @@
+         }
+     }
+
+-    Box(modifier = Modifier.fillMaxSize()) {
+-        Column(
+-            modifier = Modifier
+-                .fillMaxWidth()
+-                .background(MaterialTheme.colorScheme.background)
+-                .padding(horizontal = 20.dp)
+-                .verticalScroll(scrollState)
+-                .padding(
+-                    top = (WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 64.dp) * 0.6f,
+-                    bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+-                ),
+-            verticalArrangement = Arrangement.spacedBy(16.dp),
+-            horizontalAlignment = Alignment.CenterHorizontally
+-        ) {
+-            // Hero Image and Battery
+-            DeviceHeroCard(
+-                deviceName = state.deviceName,
+-                deviceMac = state.deviceMac,
+-                batteryLevel = state.batteryLevel,
+-                batteryCharging = state.batteryCharging,
+-                batteryLeft = state.batteryLeft,
+-                batteryRight = state.batteryRight,
+-                batteryCase = state.batteryCase,
+-                scrollValue = scrollState.value
+-            )
+-
+-            // ANC/Ambient Controls Card
+-            AncAmbientControl(
++    Box(modifier = Modifier.fillMaxSize()) {
++        CompositionLocalProvider(LocalScrollValue provides scrollState.value) {
++            Column(
++                modifier = Modifier
++                    .fillMaxWidth()
++                    .background(MaterialTheme.colorScheme.background)
++                    .padding(horizontal = 20.dp)
++                    .verticalScroll(scrollState)
++                    .padding(
++                        top = (WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 64.dp) * 0.6f,
++                        bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
++                    ),
++                verticalArrangement = Arrangement.spacedBy(16.dp),
++                horizontalAlignment = Alignment.CenterHorizontally
++            ) {
++                // Hero Image and Battery
++                DeviceHeroCard(
++                    deviceName = state.deviceName,
++                    deviceMac = state.deviceMac,
++                    batteryLevel = state.batteryLevel,
++                    batteryCharging = state.batteryCharging,
++                    batteryLeft = state.batteryLeft,
++                    batteryRight = state.batteryRight,
++                    batteryCase = state.batteryCase
++                )
++
++                // ANC/Ambient Controls Card
++                AncAmbientControl(
+@@ -128,7 +114,8 @@
+                     fontWeight = FontWeight.Bold,
+                     color = MaterialTheme.colorScheme.onError
+                 )
+             }
++            }
+         }
+
+         TopAppBar(
+--- app/src/main/kotlin/org/librecans/app/SettingsControl.kt
++++ app/src/main/kotlin/org/librecans/app/SettingsControl.kt
+@@ -274,17 +274,19 @@
+ }
+
+ @Composable
+-fun DeviceHeroCard(state: BluetoothDeviceState) {
++fun DeviceHeroCard(
++    deviceName: String,
++    deviceMac: String,
++    batteryLevel: Int,
++    batteryCharging: Boolean,
++    batteryLeft: Int,
++    batteryRight: Int,
++    batteryCase: Int
++) {
+     // Hero Image and Battery Card
+         Card(
+             modifier = Modifier.fillMaxWidth(),
+             shape = RoundedCornerShape(24.dp),
+             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+         ) {
++            val scrollValue = LocalScrollValue.current
++            val imageScale = (1f - (scrollValue / 800f)).coerceIn(0.5f, 1f)
++
+             Column(
+                 modifier = Modifier
+                     .fillMaxWidth()
+-                    .padding(20.dp),
++                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp, top = 0.dp),
+                 horizontalAlignment = Alignment.CenterHorizontally
+             ) {
+                 // Premium Generic Headphone Artwork
+-                val isTWS = state.deviceName.startsWith("WF-", ignoreCase = true) || state.deviceName.contains("LinkBuds", ignoreCase = true)
++                val isTWS = deviceName.startsWith("WF-", ignoreCase = true) || deviceName.contains("LinkBuds", ignoreCase = true)
+                 Image(
+                     painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
+                     contentDescription = if (isTWS) "Earbuds" else "Headphones",
+                     modifier = Modifier
+-                        .fillMaxWidth(0.8f)
++                        .fillMaxWidth(imageScale)
+                         .aspectRatio(1f),
+                     contentScale = ContentScale.Fit
+                 )
+@@ -302,12 +315,12 @@
+
+                 // Model name & mac
+                 Text(
+-                    text = state.deviceName,
++                    text = deviceName,
+                     style = MaterialTheme.typography.headlineMedium,
+                     fontWeight = FontWeight.Black
+                 )
+                 Text(
+-                    text = state.deviceMac,
++                    text = deviceMac,
+                     style = MaterialTheme.typography.bodyMedium,
+                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                 )
+@@ -315,15 +328,15 @@
+                 Spacer(modifier = Modifier.height(16.dp))
+
+                 // Battery indicators
+-                if (state.hasDualBattery) {
++                if (isTWS) {
+                     Row(
+                         modifier = Modifier.fillMaxWidth(),
+                         horizontalArrangement = Arrangement.SpaceAround
+                     ) {
+-                        BatteryIndicator(label = "Left Bud", percent = state.batteryLeft)
+-                        BatteryIndicator(label = "Right Bud", percent = state.batteryRight)
+-                        if (state.batteryCase >= 0) {
+-                            BatteryIndicator(label = "Case", percent = state.batteryCase)
++                        BatteryIndicator(label = "Left Bud", percent = batteryLeft)
++                        BatteryIndicator(label = "Right Bud", percent = batteryRight)
++                        if (batteryCase >= 0) {
++                            BatteryIndicator(label = "Case", percent = batteryCase)
+                         }
+                     }
+                 } else {
+@@ -338,12 +351,12 @@
+                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                         )
+                         Text(
+-                            text = if (state.batteryLevel >= 0) "${state.batteryLevel}%" else "Unknown",
++                            text = if (batteryLevel >= 0) "${batteryLevel}%" else "Unknown",
+                             style = MaterialTheme.typography.titleLarge,
+                             fontWeight = FontWeight.Bold,
+                             color = MaterialTheme.colorScheme.primary
+                         )
+-                        if (state.batteryCharging) {
++                        if (batteryCharging) {
+                             Spacer(modifier = Modifier.width(8.dp))
+                             Text(
+                                 text = "⚡ Charging",

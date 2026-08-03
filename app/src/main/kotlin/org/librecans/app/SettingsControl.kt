@@ -274,37 +274,26 @@ fun DetailRow(label: String, value: String) {
 }
 
 @Composable
-fun DeviceHeroCard(
-    deviceName: String,
-    deviceMac: String,
-    batteryLevel: Int,
-    batteryCharging: Boolean,
-    batteryLeft: Int,
-    batteryRight: Int,
-    batteryCase: Int
-) {
+fun DeviceHeroCard(state: BluetoothDeviceState) {
     // Hero Image and Battery Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
-            val scrollValue = LocalScrollValue.current
-            val imageScale = (1f - (scrollValue / 800f)).coerceIn(0.5f, 1f)
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp, top = 0.dp),
+                    .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Premium Generic Headphone Artwork
-                val isTWS = deviceName.startsWith("WF-", ignoreCase = true) || deviceName.contains("LinkBuds", ignoreCase = true)
+                val isTWS = state.deviceName.startsWith("WF-", ignoreCase = true) || state.deviceName.contains("LinkBuds", ignoreCase = true)
                 Image(
                     painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
                     contentDescription = if (isTWS) "Earbuds" else "Headphones",
                     modifier = Modifier
-                        .fillMaxWidth(imageScale)
+                        .fillMaxWidth(0.8f)
                         .aspectRatio(1f),
                     contentScale = ContentScale.Fit
                 )
@@ -313,12 +302,12 @@ fun DeviceHeroCard(
 
                 // Model name & mac
                 Text(
-                    text = deviceName,
+                    text = state.deviceName,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black
                 )
                 Text(
-                    text = deviceMac,
+                    text = state.deviceMac,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -326,15 +315,15 @@ fun DeviceHeroCard(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Battery indicators
-                if (isTWS) {
+                if (state.hasDualBattery) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        BatteryIndicator(label = "Left Bud", percent = batteryLeft)
-                        BatteryIndicator(label = "Right Bud", percent = batteryRight)
-                        if (batteryCase >= 0) {
-                            BatteryIndicator(label = "Case", percent = batteryCase)
+                        BatteryIndicator(label = "Left Bud", percent = state.batteryLeft)
+                        BatteryIndicator(label = "Right Bud", percent = state.batteryRight)
+                        if (state.batteryCase >= 0) {
+                            BatteryIndicator(label = "Case", percent = state.batteryCase)
                         }
                     }
                 } else {
@@ -349,12 +338,12 @@ fun DeviceHeroCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = if (batteryLevel >= 0) "${batteryLevel}%" else "Unknown",
+                            text = if (state.batteryLevel >= 0) "${state.batteryLevel}%" else "Unknown",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        if (batteryCharging) {
+                        if (state.batteryCharging) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "⚡ Charging",
