@@ -111,9 +111,9 @@ class MainActivity : ComponentActivity() {
                                 if (gestureExitScreen == initialState) {
                                     // Give exiting screen a higher zIndex (keep destination at targetContentZIndex = -1f so it stays behind)
                                     if (swipeEdge == BackEventCompat.EDGE_LEFT) {
-                                        (EnterTransition.None togetherWith slideOutHorizontally(animationSpec = tween(300)) { width -> width } + fadeOut()).apply { targetContentZIndex = -1f }
+                                        (EnterTransition.None togetherWith fadeOut(animationSpec = tween(300))).apply { targetContentZIndex = -1f }
                                     } else {
-                                        (EnterTransition.None togetherWith slideOutHorizontally(animationSpec = tween(300)) { width -> -width } + fadeOut()).apply { targetContentZIndex = -1f }
+                                        (EnterTransition.None togetherWith fadeOut(animationSpec = tween(300))).apply { targetContentZIndex = -1f }
                                     }
                                 } else if (targetState == AppScreen.PAIRING || initialState == AppScreen.PAIRING) {
                                     fadeIn() togetherWith fadeOut()
@@ -135,15 +135,18 @@ class MainActivity : ComponentActivity() {
                             val animatedProgress by animateFloatAsState(targetValue = currentProgress, label = "backProgressAnim", finishedListener = { if (it == 0f) targetBackScreen = null })
 
                             // Apply AOSP Material 3 predictive back styling
-                            // Scale down to 90%, add 32dp corner radius, and shift to the edge
+                            // Scale down to 90%, add 32dp corner radius, crossfade opacity, and detach from edge
                             val scale = 1f - (animatedProgress * 0.1f)
                             val cornerRadius = (animatedProgress * 32).dp
-                            val xOffset = if (swipeEdge == BackEventCompat.EDGE_LEFT) (animatedProgress * 150).roundToInt() else -(animatedProgress * 150).roundToInt()
+                            val alpha = 1f - animatedProgress
+                            // A swipe from the left edge should push the card right slightly (e.g. 24dp)
+                            val xOffset = if (swipeEdge == BackEventCompat.EDGE_LEFT) (animatedProgress * 24).dp else -(animatedProgress * 24).dp
 
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .offset { IntOffset(xOffset, 0) }
+                                    .offset(x = xOffset)
+                                    .alpha(alpha)
                                     .scale(scale)
                                     .clip(RoundedCornerShape(cornerRadius))
                             ) {
