@@ -32,7 +32,6 @@ fun EqualizerControl(
     onSetPreset: (EqPreset) -> Unit,
     onSetCustomEq: (clearBass: Int, bands: List<Int>, sendWrite: Boolean) -> Unit
 ) {
-    var isExpanded by remember { mutableStateOf(true) }
     var isSlidersExpanded by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
@@ -62,7 +61,6 @@ fun EqualizerControl(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded }
                     .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -73,18 +71,8 @@ fun EqualizerControl(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                Text(
-                    text = if (isExpanded) "▲" else "▼",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
             }
 
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)),
-                exit = shrinkVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium))
-            ) {
                 Column(modifier = Modifier.testTag("eq_panel_content")) {
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -274,7 +262,6 @@ fun EqualizerControl(
                 }
             }
                 }
-            }
         }
     }
 }
