@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -296,14 +298,19 @@ fun DeviceItemRow(
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "🎧",
-                fontSize = 32.sp,
-                modifier = Modifier.padding(end = 16.dp)
+            val deviceName = device.name ?: "Sony Headset"
+            val isTWS = deviceName.startsWith("WF-", ignoreCase = true) || deviceName.contains("LinkBuds", ignoreCase = true)
+
+            Image(
+                painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
+                contentDescription = if (isTWS) "Earbuds" else "Headphones",
+                modifier = Modifier
+                    .size(48.dp)
+                    .padding(end = 16.dp)
             )
             Column {
                 Text(
-                    text = device.name ?: "Sony Headset",
+                    text = deviceName,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
