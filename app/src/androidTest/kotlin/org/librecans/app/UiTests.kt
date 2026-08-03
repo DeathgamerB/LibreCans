@@ -7,7 +7,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Rule
 import org.junit.Test
-import org.librecans.protocol.SonyProtocolVersion
 
 class UiTests {
 
@@ -57,10 +56,22 @@ class UiTests {
         // Assert it is now displayed structurally
         composeTestRule.onNodeWithTag("eq_panel_content").assertIsDisplayed()
 
+        // Click to collapse
+        composeTestRule.onNodeWithText("Equalizer").performClick()
+
+        // Assert it is now hidden
+        composeTestRule.onNodeWithTag("eq_panel_content").assertDoesNotExist()
+
         // Same for Settings/Features
         composeTestRule.onNodeWithTag("settings_panel_content").assertDoesNotExist()
+
+        // Expand
         composeTestRule.onNodeWithText("Features & Configuration").performClick()
         composeTestRule.onNodeWithTag("settings_panel_content").assertIsDisplayed()
+
+        // Collapse
+        composeTestRule.onNodeWithText("Features & Configuration").performClick()
+        composeTestRule.onNodeWithTag("settings_panel_content").assertDoesNotExist()
     }
 
     @Test

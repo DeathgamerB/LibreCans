@@ -8,8 +8,8 @@ This project is built as a permitted derivative of **SonyBridge** and **SonyHead
 
 ## Features
 - **Ambient Sound Control**: Noise Cancelling, Ambient Sound (0–20 levels), and Off modes.
-- **Focus on Voice**: Capability-gated passthrough toggle.
-- **Equalizer**: Presets + full manual mode (5 bands + Clear Bass) with reactive dynamic labels.
+- **Focus on Voice**: Capability-gated passthrough toggle (Voice-centric Transparency).
+- **Equalizer**: Presets + full working manual mode (5 configurable manual bands + Clear Bass) with reactive dynamic labels.
 - **DSEE Upscaling**: Dynamic high-frequency audio upscaling toggle.
 - **Battery Levels**: Per-earbud and case indicators for TWS models, or master single level + charging state for over-ear/traditional models.
 - **Hardware Readouts**: Instant lookup of active audio codec, firmware version, and active protocol generation.
@@ -22,6 +22,9 @@ This project is built as a permitted derivative of **SonyBridge** and **SonyHead
 
 ## Known Limitations & Testing
 - **Hardware Verification**: Only the **WH-CH720N and Wf-1000xm5** have been hardware-verified by the upstream projects and me; other Sony models (e.g. WH-1000XM3, WH-1000XM4, WH-1000XM5, LinkBuds S, WF-C700N, etc.) are highly expected to work based on shared protocol families.
+
+## Hardware State & Tracking
+This project reliably fetches dynamic hardware properties. Capabilities such as dual-battery TWS readouts vs. single master battery level, Voice-centric Transparency, Equalizer manual bands, and Speak-to-Chat are robustly verified during connection handshake.
 
 ## Architecture
 The project is structured into two modules:
