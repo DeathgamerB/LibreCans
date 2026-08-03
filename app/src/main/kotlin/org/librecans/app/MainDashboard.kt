@@ -30,34 +30,17 @@ fun MainDashboard(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "LibreCans",
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                },
-                actions = {
-                    TextButton(onClick = onNavigateToAbout) {
-                        Text("About", fontWeight = FontWeight.Bold)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        }
-    ) { innerPadding ->
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState)
-                .padding(top = innerPadding.calculateTopPadding() * 0.6f, bottom = innerPadding.calculateBottomPadding()),
+                .padding(
+                    top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 64.dp,
+                    bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+                ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -136,5 +119,23 @@ fun MainDashboard(
                 )
             }
         }
+
+        TopAppBar(
+            title = {
+                Text(
+                    "LibreCans",
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
+            actions = {
+                TextButton(onClick = onNavigateToAbout) {
+                    Text("About", fontWeight = FontWeight.Bold)
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = androidx.compose.ui.graphics.Color.Transparent
+            )
+        )
     }
 }

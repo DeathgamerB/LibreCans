@@ -94,8 +94,12 @@ fun PairingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
-                .padding(24.dp),
+                .padding(
+                    top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 24.dp,
+                    bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding() + 24.dp,
+                    start = 24.dp,
+                    end = 24.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header

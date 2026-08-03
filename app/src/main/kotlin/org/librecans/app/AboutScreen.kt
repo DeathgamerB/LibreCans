@@ -31,14 +31,16 @@ fun AboutScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .safeDrawingPadding()
-                .padding(24.dp)
-                .verticalScroll(scrollState),
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+                .padding(
+                    top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 16.dp,
+                    bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding() + 24.dp,
+                    start = 24.dp,
+                    end = 24.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
             Text(
                 text = "LibreCans",
                 style = MaterialTheme.typography.headlineMedium,
@@ -194,8 +196,6 @@ fun AboutScreen(
             ) {
                 Text("Back to Dashboard", fontWeight = FontWeight.Bold)
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
