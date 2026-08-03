@@ -315,14 +315,24 @@ fun DeviceHeroCard(
                     modifier = Modifier
                         .layout { measurable, constraints ->
                             val scrollValue = scrollValueProvider()
-                            val targetScale = (1f - (scrollValue / (800 * density))).coerceIn(0.5f, 1f)
+                            val targetScale: Float
+                            val topPadding: Int
+
+                            if (isTWS) {
+                                targetScale = (1f - (scrollValue / (800 * density))).coerceIn(0.5f, 1f)
+                                topPadding = 0
+                            } else {
+                                targetScale = (0.8f - (scrollValue / (400 * density))).coerceIn(0.4f, 0.8f)
+                                topPadding = ((0.8f - targetScale) * constraints.maxWidth * 0.15f).toInt()
+                            }
+
                             val newWidth = (constraints.maxWidth * targetScale).toInt()
                             val placeable = measurable.measure(constraints.copy(
                                 minWidth = newWidth,
                                 maxWidth = newWidth
                             ))
-                            layout(placeable.width, placeable.height) {
-                                placeable.placeRelative(0, 0)
+                            layout(placeable.width, placeable.height + topPadding) {
+                                placeable.placeRelative(0, topPadding)
                             }
                         }
                         .aspectRatio(1f),
