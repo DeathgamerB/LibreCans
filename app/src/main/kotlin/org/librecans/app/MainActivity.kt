@@ -14,6 +14,8 @@ import androidx.activity.BackEventCompat
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.draw.alpha
@@ -118,11 +120,11 @@ class MainActivity : ComponentActivity() {
                                 } else if (targetState == AppScreen.PAIRING || initialState == AppScreen.PAIRING) {
                                     fadeIn() togetherWith fadeOut()
                                 } else if (targetState.ordinal > initialState.ordinal) {
-                                    // Moving deeper: slide in from right
-                                    slideInHorizontally { width -> width } + fadeIn() togetherWith slideOutHorizontally { width -> -width / 3 } + fadeOut()
+                                    // Moving deeper: scale up and fade in
+                                    scaleIn(initialScale = 0.9f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)) + fadeIn(animationSpec = tween(300)) togetherWith scaleOut(targetScale = 1.1f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)) + fadeOut(animationSpec = tween(300))
                                 } else {
-                                    // Moving back normally (not gesture): slide in from left
-                                    slideInHorizontally { width -> -width / 3 } + fadeIn() togetherWith slideOutHorizontally { width -> width } + fadeOut()
+                                    // Moving back normally (not gesture): scale down and fade in
+                                    scaleIn(initialScale = 1.1f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)) + fadeIn(animationSpec = tween(300)) togetherWith scaleOut(targetScale = 0.9f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)) + fadeOut(animationSpec = tween(300))
                                 }
                             },
                             label = "Screen Transition"
