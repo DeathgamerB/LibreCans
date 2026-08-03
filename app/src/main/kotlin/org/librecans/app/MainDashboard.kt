@@ -33,21 +33,21 @@ fun MainDashboard(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 20.dp)
-                .verticalScroll(scrollState)
-                .padding(
-                    top = (WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 64.dp) * 0.6f,
-                    bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
-                ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Hero Image and Battery
-            CompositionLocalProvider(LocalScrollValue provides scrollState.value) {
+        CompositionLocalProvider(LocalScrollValue provides scrollState.value) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = 20.dp)
+                    .verticalScroll(scrollState)
+                    .padding(
+                        top = (WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 64.dp) * 0.6f,
+                        bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+                    ),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Hero Image and Battery
                 DeviceHeroCard(
                     deviceName = state.deviceName,
                     deviceMac = state.deviceMac,
@@ -57,7 +57,6 @@ fun MainDashboard(
                     batteryRight = state.batteryRight,
                     batteryCase = state.batteryCase
                 )
-            }
 
             // ANC/Ambient Controls Card
             AncAmbientControl(
@@ -129,6 +128,7 @@ fun MainDashboard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onError
                 )
+            }
             }
         }
 
