@@ -274,7 +274,18 @@ fun DetailRow(label: String, value: String) {
 }
 
 @Composable
-fun DeviceHeroCard(state: BluetoothDeviceState, scrollValue: Int = 0) {
+fun DeviceHeroCard(
+    deviceName: String,
+    deviceMac: String,
+    batteryLevel: Int,
+    batteryCharging: Boolean,
+    batteryLeft: Int,
+    batteryRight: Int,
+    batteryCase: Int,
+    scrollValue: Int = 0
+) {
+    val hasDualBattery = batteryLeft >= 0 || batteryRight >= 0
+
     // Hero Image and Battery Card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -290,7 +301,7 @@ fun DeviceHeroCard(state: BluetoothDeviceState, scrollValue: Int = 0) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Premium Generic Headphone Artwork
-                val isTWS = state.deviceName.startsWith("WF-", ignoreCase = true) || state.deviceName.contains("LinkBuds", ignoreCase = true)
+                val isTWS = deviceName.startsWith("WF-", ignoreCase = true) || deviceName.contains("LinkBuds", ignoreCase = true)
                 Image(
                     painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
                     contentDescription = if (isTWS) "Earbuds" else "Headphones",
@@ -304,12 +315,12 @@ fun DeviceHeroCard(state: BluetoothDeviceState, scrollValue: Int = 0) {
 
                 // Model name & mac
                 Text(
-                    text = state.deviceName,
+                    text = deviceName,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black
                 )
                 Text(
-                    text = state.deviceMac,
+                    text = deviceMac,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -317,15 +328,15 @@ fun DeviceHeroCard(state: BluetoothDeviceState, scrollValue: Int = 0) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Battery indicators
-                if (state.hasDualBattery) {
+                if (hasDualBattery) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        BatteryIndicator(label = "Left Bud", percent = state.batteryLeft)
-                        BatteryIndicator(label = "Right Bud", percent = state.batteryRight)
-                        if (state.batteryCase >= 0) {
-                            BatteryIndicator(label = "Case", percent = state.batteryCase)
+                        BatteryIndicator(label = "Left Bud", percent = batteryLeft)
+                        BatteryIndicator(label = "Right Bud", percent = batteryRight)
+                        if (batteryCase >= 0) {
+                            BatteryIndicator(label = "Case", percent = batteryCase)
                         }
                     }
                 } else {
@@ -340,12 +351,12 @@ fun DeviceHeroCard(state: BluetoothDeviceState, scrollValue: Int = 0) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = if (state.batteryLevel >= 0) "${state.batteryLevel}%" else "Unknown",
+                            text = if (batteryLevel >= 0) "${batteryLevel}%" else "Unknown",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        if (state.batteryCharging) {
+                        if (batteryCharging) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "⚡ Charging",
