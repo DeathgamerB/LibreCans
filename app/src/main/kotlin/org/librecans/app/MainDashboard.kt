@@ -56,7 +56,8 @@ fun MainDashboard(
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .padding(top = innerPadding.calculateTopPadding(), bottom = innerPadding.calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -134,8 +135,6 @@ fun MainDashboard(
                     color = MaterialTheme.colorScheme.onError
                 )
             }
-
-            Spacer(modifier = Modifier.height(innerPadding.calculateBottomPadding()))
         }
     }
 }
