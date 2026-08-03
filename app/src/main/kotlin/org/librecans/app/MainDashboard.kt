@@ -53,15 +53,14 @@ fun MainDashboard(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .padding(top = innerPadding.calculateTopPadding() * 0.6f, bottom = innerPadding.calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.padding(innerPadding).safeDrawingPadding())
-
             // Hero Image and Battery
             DeviceHeroCard(state = state)
 
@@ -136,8 +135,6 @@ fun MainDashboard(
                     color = MaterialTheme.colorScheme.onError
                 )
             }
-
-            Spacer(modifier = Modifier.padding(innerPadding).safeDrawingPadding())
         }
     }
 }
