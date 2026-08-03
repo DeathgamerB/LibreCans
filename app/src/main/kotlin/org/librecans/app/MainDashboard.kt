@@ -13,6 +13,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+val LocalScrollValue = compositionLocalOf { 0 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainDashboard(
@@ -45,16 +47,17 @@ fun MainDashboard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Hero Image and Battery
-            DeviceHeroCard(
-                deviceName = state.deviceName,
-                deviceMac = state.deviceMac,
-                batteryLevel = state.batteryLevel,
-                batteryCharging = state.batteryCharging,
-                batteryLeft = state.batteryLeft,
-                batteryRight = state.batteryRight,
-                batteryCase = state.batteryCase,
-                scrollValue = scrollState.value
-            )
+            CompositionLocalProvider(LocalScrollValue provides scrollState.value) {
+                DeviceHeroCard(
+                    deviceName = state.deviceName,
+                    deviceMac = state.deviceMac,
+                    batteryLevel = state.batteryLevel,
+                    batteryCharging = state.batteryCharging,
+                    batteryLeft = state.batteryLeft,
+                    batteryRight = state.batteryRight,
+                    batteryCase = state.batteryCase
+                )
+            }
 
             // ANC/Ambient Controls Card
             AncAmbientControl(

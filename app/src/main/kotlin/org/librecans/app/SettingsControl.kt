@@ -281,17 +281,15 @@ fun DeviceHeroCard(
     batteryCharging: Boolean,
     batteryLeft: Int,
     batteryRight: Int,
-    batteryCase: Int,
-    scrollValue: Int = 0
+    batteryCase: Int
 ) {
-    val hasDualBattery = batteryLeft >= 0 || batteryRight >= 0
-
     // Hero Image and Battery Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
+            val scrollValue = LocalScrollValue.current
             val imageScale = (1f - (scrollValue / 800f)).coerceIn(0.5f, 1f)
 
             Column(
