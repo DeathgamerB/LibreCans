@@ -317,13 +317,16 @@ fun DeviceHeroCard(
                             val scrollValue = scrollValueProvider()
                             val targetScale: Float
                             val topPadding: Int
+                            val bottomCrop: Int
 
                             if (isTWS) {
-                                targetScale = (1f - (scrollValue / (800 * density))).coerceIn(0.5f, 1f)
+                                targetScale = (0.95f - (scrollValue / (400 * density))).coerceIn(0.475f, 0.95f)
                                 topPadding = 0
+                                bottomCrop = (constraints.maxWidth * 0.10f).toInt()
                             } else {
                                 targetScale = (0.8f - (scrollValue / (400 * density))).coerceIn(0.4f, 0.8f)
                                 topPadding = ((0.8f - targetScale) * constraints.maxWidth * 0.15f).toInt()
+                                bottomCrop = 0
                             }
 
                             val newWidth = (constraints.maxWidth * targetScale).toInt()
@@ -331,7 +334,7 @@ fun DeviceHeroCard(
                                 minWidth = newWidth,
                                 maxWidth = newWidth
                             ))
-                            layout(placeable.width, placeable.height + topPadding) {
+                            layout(placeable.width, placeable.height + topPadding - bottomCrop) {
                                 placeable.placeRelative(0, topPadding)
                             }
                         }
