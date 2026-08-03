@@ -34,8 +34,8 @@ fun AboutScreen(
                 .fillMaxWidth()
                 .verticalScroll(scrollState)
                 .padding(
-                    top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 16.dp,
-                    bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding() + 24.dp,
+                    top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 40.dp,
+                    bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding() + 48.dp,
                     start = 24.dp,
                     end = 24.dp
                 ),

@@ -274,7 +274,7 @@ fun DetailRow(label: String, value: String) {
 }
 
 @Composable
-fun DeviceHeroCard(state: BluetoothDeviceState, scrollValue: Int) {
+fun DeviceHeroCard(state: BluetoothDeviceState, scrollValue: Int = 0) {
     // Hero Image and Battery Card
         Card(
             modifier = Modifier.fillMaxWidth(),

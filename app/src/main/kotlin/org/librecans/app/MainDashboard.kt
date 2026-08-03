@@ -38,7 +38,7 @@ fun MainDashboard(
                 .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState)
                 .padding(
-                    top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 64.dp,
+                    top = (WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 64.dp) * 0.6f,
                     bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
                 ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
