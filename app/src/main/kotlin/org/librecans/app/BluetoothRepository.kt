@@ -418,7 +418,7 @@ class BluetoothRepository(private val context: Context) {
 
                     if (payload.size >= 10) {
                         clearBass = (payload[4].toInt() and 0xFF) - 10
-                        bands = (0 until 5).map { i ->
+                        bands = List(5) { i ->
                             (payload[5 + i].toInt() and 0xFF) - 10
                         }
                     }
@@ -749,7 +749,7 @@ class BluetoothRepository(private val context: Context) {
                     val preset = EqPreset.fromByte(bytes[2])
                     if (preset == EqPreset.MANUAL && bytes.size >= 10) {
                         val clearBass = (bytes[4].toInt() and 0xFF) - 10
-                        val bands = (0 until 5).map { i ->
+                        val bands = List(5) { i ->
                             (bytes[5 + i].toInt() and 0xFF) - 10
                         }
                         _deviceState.value = state.copy(
@@ -929,7 +929,7 @@ class BluetoothRepository(private val context: Context) {
             val payloadHex = packedBytes.joinToString("") { String.format("%02X ", it) }
             Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
 
-            val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
+            val targetBands = List(5) { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
 
             updateStateOptimistically(
                 update = { current ->
