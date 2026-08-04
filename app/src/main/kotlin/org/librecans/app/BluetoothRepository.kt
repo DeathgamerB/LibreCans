@@ -3,6 +3,7 @@ package org.librecans.app
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.util.Log
@@ -135,7 +136,7 @@ class BluetoothRepository(private val context: Context) {
     }
 
     fun getPairedDevices(): List<android.bluetooth.BluetoothDevice> {
-        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return emptyList()
+        val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter ?: return emptyList()
         return try {
             adapter.bondedDevices.toList()
         } catch (e: Exception) {
@@ -159,7 +160,7 @@ class BluetoothRepository(private val context: Context) {
         )
 
         scope.launch {
-            val adapter = BluetoothAdapter.getDefaultAdapter()
+            val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
             if (adapter == null) {
                 updateError("Bluetooth is not supported on this device.")
                 return@launch

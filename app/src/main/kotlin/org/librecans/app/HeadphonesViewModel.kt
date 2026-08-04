@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -23,6 +24,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
+import androidx.core.content.IntentCompat
 
 @SuppressLint("MissingPermission")
 class HeadphonesViewModel(application: Application) : AndroidViewModel(application) {
@@ -35,7 +37,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
         override fun onReceive(context: Context?, intent: Intent?) {
             val action = intent?.action
             if (action == BluetoothDevice.ACTION_ACL_CONNECTED) {
-                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                val device = intent?.let { IntentCompat.getParcelableExtra(it, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) }
                 val name = device?.name ?: ""
                 if (looksLikeSonyHeadset(name)) {
                     Log.d(TAG, "Sony headset ACL Connected: $name, triggering auto-connect")
@@ -122,7 +124,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun loadPairedDevices() {
-        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
+        val adapter = getApplication<Application>().getSystemService(BluetoothManager::class.java)?.adapter ?: return
         try {
             val bonded = adapter.bondedDevices.toList().filter { dev ->
                 val name = dev.name ?: ""
@@ -141,7 +143,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun getConnectedSonyDevice(): BluetoothDevice? {
-        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return null
+        val adapter = getApplication<Application>().getSystemService(BluetoothManager::class.java)?.adapter ?: return null
         return try {
             val isConnectedMethod = BluetoothDevice::class.java.getMethod("isConnected")
             adapter.bondedDevices.firstOrNull { dev ->
