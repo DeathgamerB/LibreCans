@@ -62,10 +62,18 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     implementation(libs.kotlinx.coroutines.core)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+// TODO: KNOWN LIMITATION
+// The environment sandbox network is unable to download the 'platforms;android-37' package via sdkmanager.
+// As a result, we cannot upgrade AGP to 9.2.0, compileSdk to 37, or use the latest Compose BOM (2026.06.01)
+// or core-ktx (1.19.0) as they strictly require API 37.
+// The versions used below are the highest stable versions that can build successfully under API 35/36.
+// Note: androidx.compose.material3 remains on 1.5.0-alpha08 because 1.5.0-alpha25 requires compileSdk 37,
+// and upgrading to the 1.4.0 stable branch removes the MaterialExpressiveTheme APIs required by the app.
