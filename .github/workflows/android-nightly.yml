@@ -1,0 +1,110 @@
+name: Android Nightly Build
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run at 00:00 UTC daily
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build-nightly:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for creating GitHub Releases
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Need full history to check previous tags
+
+    - name: Check for new commits
+      id: check_commits
+      run: |
+        # Find the latest tag
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+        if [ -z "$LATEST_TAG" ]; then
+          # If no tags exist, just get all commits
+          NEW_COMMITS=$(git log --pretty=format:"* %s%n%b" | grep -v "^$")
+        else
+          # Get commits since latest tag
+          NEW_COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"* %s%n%b" | grep -v "^$")
+        fi
+
+        if [ -z "$NEW_COMMITS" ]; then
+          echo "No new commits found since last tag. Skipping release."
+          echo "has_commits=false" >> $GITHUB_OUTPUT
+        else
+          echo "has_commits=true" >> $GITHUB_OUTPUT
+          # Save commits to a file for release notes
+          echo "$NEW_COMMITS" > release_notes.txt
+        fi
+
+    - name: Set up JDK 21
+      if: steps.check_commits.outputs.has_commits == 'true'
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant Execute Permission to Gradlew
+      if: steps.check_commits.outputs.has_commits == 'true'
+      run: chmod +x gradlew
+
+    - name: Run Unit Tests
+      if: steps.check_commits.outputs.has_commits == 'true'
+      run: ./gradlew test
+
+    - name: Generate Version Code and Name
+      if: steps.check_commits.outputs.has_commits == 'true'
+      id: version_code
+      run: |
+        TOTAL_COMMITS=$(git rev-list --count HEAD)
+        echo "VERSION_CODE=$TOTAL_COMMITS" >> $GITHUB_ENV
+
+        # Generate nightly version name based on date and short SHA
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        DATE_STR=$(date +'%Y-%m-%d')
+        echo "VERSION_NAME=nightly-$DATE_STR-$SHORT_SHA" >> $GITHUB_ENV
+        echo "TAG_NAME=nightly-$DATE_STR" >> $GITHUB_ENV
+        echo "RELEASE_NAME=Nightly Build $DATE_STR" >> $GITHUB_ENV
+
+    - name: Build Unsigned Release APK
+      if: steps.check_commits.outputs.has_commits == 'true'
+      run: ./gradlew :app:assembleRelease
+      env:
+        VERSION_CODE: ${{ env.VERSION_CODE }}
+        VERSION_NAME: ${{ env.VERSION_NAME }}
+
+    - name: Sign Release APK
+      if: steps.check_commits.outputs.has_commits == 'true'
+      id: sign_app
+      uses: ilharp/sign-android-release@v1
+      with:
+        releaseDir: app/build/outputs/apk/release
+        signingKey: ${{ secrets.RELEASE_SIGNING_KEY }}
+        keyAlias: ${{ secrets.RELEASE_KEY_ALIAS }}
+        keyStorePassword: ${{ secrets.RELEASE_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        buildToolsVersion: 35.0.0
+
+    - name: Upload Signed Release APK Artifact
+      if: steps.check_commits.outputs.has_commits == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: LibreCans-Signed-Nightly-APK
+        path: ${{ steps.sign_app.outputs.signedFile }}
+
+    - name: Create GitHub Pre-release
+      if: steps.check_commits.outputs.has_commits == 'true'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        name: ${{ env.RELEASE_NAME }}
+        body_path: release_notes.txt
+        files: ${{ steps.sign_app.outputs.signedFile }}
+        draft: false
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
