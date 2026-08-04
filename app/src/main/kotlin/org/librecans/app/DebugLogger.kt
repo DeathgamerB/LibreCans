@@ -17,17 +17,23 @@ object DebugLogger {
     private val logBuffer = mutableListOf<String>()
     private const val MAX_BUFFER_SIZE = 1000
 
+    private val dateFormat = object : ThreadLocal<SimpleDateFormat>() {
+        override fun initialValue(): SimpleDateFormat {
+            return SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+        }
+    }
+
     var isDebugMode: Boolean = false
         private set
 
     fun initialize(context: Context) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = PrefsHelper.getEncryptedPrefs(context, PREFS_NAME)
         isDebugMode = prefs.getBoolean(KEY_DEBUG_MODE, false)
     }
 
     fun toggleDebugMode(context: Context, enabled: Boolean) {
         isDebugMode = enabled
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = PrefsHelper.getEncryptedPrefs(context, PREFS_NAME)
         prefs.edit().putBoolean(KEY_DEBUG_MODE, enabled).apply()
         if (!enabled) {
             clearLogs(context)
@@ -38,7 +44,7 @@ object DebugLogger {
     fun log(context: Context, tag: String, message: String) {
         if (!BuildConfig.DEBUG || !isDebugMode) return
 
-        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
+        val timestamp = dateFormat.get()!!.format(Date())
         val formattedEntry = "[$timestamp] [$tag] $message"
 
         // 1. Add to in-memory buffer
