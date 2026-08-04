@@ -18,6 +18,22 @@ import java.io.OutputStream
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
+
+private fun ByteArray.toHex(): String = buildString(size * 3) {
+    for (b in this@toHex) {
+        val v = b.toInt()
+        append(HEX_CHARS[v shr 4 and 0x0F])
+        append(HEX_CHARS[v and 0x0F])
+        append(' ')
+    }
+}
+
+private fun Byte.toHex(): String {
+    val v = this.toInt()
+    return "${HEX_CHARS[v shr 4 and 0x0F]}${HEX_CHARS[v and 0x0F]}"
+}
+
 @SuppressLint("MissingPermission")
 class BluetoothRepository(private val context: Context) {
     private val TAG = "BluetoothRepository"
@@ -46,7 +62,7 @@ class BluetoothRepository(private val context: Context) {
     private var pollJob: Job? = null
     private var ambientDebounceJob: Job? = null
     private var eqDebounceJob: Job? = null
-    private var lastAmbientUpdate: Long = 0
+    @Volatile private var lastAmbientUpdate: Long = 0
     private val scope = CoroutineScope(DispatchScope + SupervisorJob())
 
     // Cache of successful protocol versions per MAC address
@@ -156,7 +172,7 @@ class BluetoothRepository(private val context: Context) {
 
             val startTime = System.currentTimeMillis()
             var attempt = 1
-            while (connectedSocket == null && (System.currentTimeMillis() - startTime) < 10000) {
+            while (connectedSocket == null && (System.currentTimeMillis() - startTime) < 15000) {
                 Log.d(TAG, "Connection attempt $attempt...")
                 DebugLogger.log(context, "BluetoothRepository", "Connection attempt $attempt for $macAddress")
 
@@ -185,7 +201,7 @@ class BluetoothRepository(private val context: Context) {
 
                 if (connectedSocket == null) {
                     attempt++
-                    delay(500) // Wait 500ms before retrying
+                    delay(1500) // Wait 1.5s before retrying
                 }
             }
 
@@ -224,16 +240,40 @@ class BluetoothRepository(private val context: Context) {
         }
     }
 
-    private fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
+    private suspend fun tryConnectSocket(device: BluetoothDevice, uuidStr: String): BluetoothSocket? {
         val uuid = UUID.fromString(uuidStr)
         var sock: BluetoothSocket? = null
         DebugLogger.log(context, "BluetoothRepository", "tryConnectSocket to UUID $uuidStr")
         return try {
             sock = device.createRfcommSocketToServiceRecord(uuid)
-            sock.connect()
+            withContext(Dispatchers.IO) {
+                withTimeoutOrNull(1000) {
+                    suspendCancellableCoroutine<Unit> { cont ->
+                        cont.invokeOnCancellation {
+                            try {
+                                sock.close()
+                            } catch (e: IOException) {
+                                // Ignore
+                            }
+                        }
+
+                        try {
+                            sock.connect()
+                            if (cont.isActive) {
+                                cont.resumeWith(Result.success(Unit))
+                            }
+                        } catch (e: IOException) {
+                            if (cont.isActive) {
+                                cont.resumeWith(Result.failure(e))
+                            }
+                        }
+                    }
+                }
+            } ?: throw IOException("Socket connection timed out")
+
             DebugLogger.log(context, "BluetoothRepository", "RFCOMM socket connect successful to UUID $uuidStr")
             sock
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             Log.w(TAG, "Connection failed to UUID $uuidStr: ${e.message}")
             DebugLogger.log(context, "BluetoothRepository", "Connection failed to UUID $uuidStr: ${e.message}")
             try {
@@ -303,12 +343,12 @@ class BluetoothRepository(private val context: Context) {
             val op = msg.payload[0]
             val sub = if (msg.payload.size > 1) msg.payload[1] else -1.toByte()
 
-            Log.d(TAG, "Recv DATA_MDR: op=0x${String.format("%02X", op)}, sub=0x${String.format("%02X", sub)}")
-            val payloadHex = msg.payload.joinToString("") { String.format("%02X ", it) }
-            DebugLogger.log(context, "BluetoothRepository", "Received DATA_MDR: op=0x${String.format("%02X", op)} sub=0x${String.format("%02X", sub)} | payload hex: $payloadHex")
+            Log.d(TAG, "Recv DATA_MDR: op=0x${op.toHex()}, sub=0x${sub.toHex()}")
+            val payloadHex = msg.payload.toHex()
+            DebugLogger.log(context, "BluetoothRepository", "Received DATA_MDR: op=0x${op.toHex()} sub=0x${sub.toHex()} | payload hex: $payloadHex")
 
             // Complete any pending deferables
-            val keySub = "0x${String.format("%02X", op)}_0x${String.format("%02X", sub)}"
+            val keySub = "0x${op.toHex()}_0x${sub.toHex()}"
             val deferredSub = pendingSubtypeResponses.remove(keySub)
             if (deferredSub != null) {
                 deferredSub.complete(msg.payload)
@@ -394,9 +434,13 @@ class BluetoothRepository(private val context: Context) {
 
                     if (payload.size >= 10) {
                         clearBass = (payload[4].toInt() and 0xFF) - 10
-                        bands = (0 until 5).map { i ->
-                            (payload[5 + i].toInt() and 0xFF) - 10
-                        }
+                        bands = listOf(
+                            (payload[5].toInt() and 0xFF) - 10,
+                            (payload[6].toInt() and 0xFF) - 10,
+                            (payload[7].toInt() and 0xFF) - 10,
+                            (payload[8].toInt() and 0xFF) - 10,
+                            (payload[9].toInt() and 0xFF) - 10
+                        )
                     }
 
                     _deviceState.value = state.copy(
@@ -634,10 +678,10 @@ class BluetoothRepository(private val context: Context) {
         val outStream = socket?.outputStream ?: throw IOException("Socket is closed")
         synchronized(ioMutex) {
             val packed = CommandSerializer.packageDataForBt(bytes, DataType.DATA_MDR, seqNumber++)
-            val hexStr = packed.joinToString("") { String.format("%02X ", it) }
+            val hexStr = packed.toHex()
             Log.d(TAG, "Writing packed frame to BluetoothSocket: size=${packed.size} bytes, frame hex=$hexStr")
 
-            val payloadHex = bytes.joinToString("") { String.format("%02X ", it) }
+            val payloadHex = bytes.toHex()
             DebugLogger.log(context, "BluetoothRepository", "Writing command payload (size=${bytes.size} bytes) hex: $payloadHex | packed frame hex: $hexStr")
 
             outStream.write(packed)
@@ -684,7 +728,7 @@ class BluetoothRepository(private val context: Context) {
     ): ByteArray {
         val deferred = CompletableDeferred<ByteArray>()
         if (retSubType != null) {
-            val keySub = "0x${String.format("%02X", retCommandId)}_0x${String.format("%02X", retSubType)}"
+            val keySub = "0x${retCommandId.toHex()}_0x${retSubType.toHex()}"
             pendingSubtypeResponses[keySub] = deferred
         } else {
             pendingResponses[retCommandId] = deferred
@@ -705,9 +749,6 @@ class BluetoothRepository(private val context: Context) {
         val state = _deviceState.value
         when (op) {
             CommandType.NCASM_SET_PARAM.value -> {
-                if (System.currentTimeMillis() - lastAmbientUpdate < 1500L) {
-                    return
-                }
                 // v2 layout: 0x68 | 0x17 | 0x01 | [effect] | [settingType] | [voice] | [level]
                 if (bytes.size >= 7 && bytes[1] == 0x17.toByte()) {
                     val effectOn = bytes[3] != 0.toByte()
@@ -728,9 +769,13 @@ class BluetoothRepository(private val context: Context) {
                     val preset = EqPreset.fromByte(bytes[2])
                     if (preset == EqPreset.MANUAL && bytes.size >= 10) {
                         val clearBass = (bytes[4].toInt() and 0xFF) - 10
-                        val bands = (0 until 5).map { i ->
-                            (bytes[5 + i].toInt() and 0xFF) - 10
-                        }
+                        val bands = listOf(
+                            (bytes[5].toInt() and 0xFF) - 10,
+                            (bytes[6].toInt() and 0xFF) - 10,
+                            (bytes[7].toInt() and 0xFF) - 10,
+                            (bytes[8].toInt() and 0xFF) - 10,
+                            (bytes[9].toInt() and 0xFF) - 10
+                        )
                         _deviceState.value = state.copy(
                             eqPreset = EqPreset.MANUAL,
                             eqClearBass = clearBass,
@@ -780,7 +825,7 @@ class BluetoothRepository(private val context: Context) {
 
     fun setAmbientMode(controlOn: Boolean, level: Int, focusVoice: Boolean, sendWrite: Boolean = true) {
         ambientDebounceJob?.cancel()
-        ambientDebounceJob = scope.launch {
+        ambientDebounceJob = scope.launch(Dispatchers.IO) {
             lastAmbientUpdate = System.currentTimeMillis()
             delay(150)
             val state = _deviceState.value
@@ -826,6 +871,7 @@ class BluetoothRepository(private val context: Context) {
     }
 
     fun setEqualizerPreset(preset: EqPreset) {
+        scope.launch(Dispatchers.IO) {
         val isManual = preset == EqPreset.MANUAL ||
                        preset == EqPreset.CUSTOM_1 ||
                        preset == EqPreset.CUSTOM_2
@@ -871,11 +917,12 @@ class BluetoothRepository(private val context: Context) {
                 bytes = bytes
             )
         }
+            }
     }
 
     fun setEqualizerCustom(clearBass: Int, bands: List<Int>, sendWrite: Boolean = true) {
         eqDebounceJob?.cancel()
-        eqDebounceJob = scope.launch {
+        eqDebounceJob = scope.launch(Dispatchers.IO) {
             delay(150)
             val out = java.io.ByteArrayOutputStream()
             out.write(V2Command.EQ_SET.toInt())
@@ -903,10 +950,24 @@ class BluetoothRepository(private val context: Context) {
             }
 
             val packedBytes = out.toByteArray()
-            val payloadHex = packedBytes.joinToString("") { String.format("%02X ", it) }
+            val payloadHex = buildString(packedBytes.size * 3) {
+                val hexChars = "0123456789ABCDEF"
+                for (b in packedBytes) {
+                    val v = b.toInt() and 0xFF
+                    append(hexChars[v ushr 4])
+                    append(hexChars[v and 0x0F])
+                    append(' ')
+                }
+            }
             Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
 
-            val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
+            val targetBands = listOf(
+                if (0 < bands.size) bands[0].coerceIn(-10, 10) else 0,
+                if (1 < bands.size) bands[1].coerceIn(-10, 10) else 0,
+                if (2 < bands.size) bands[2].coerceIn(-10, 10) else 0,
+                if (3 < bands.size) bands[3].coerceIn(-10, 10) else 0,
+                if (4 < bands.size) bands[4].coerceIn(-10, 10) else 0
+            )
 
             updateStateOptimistically(
                 update = { current ->
@@ -922,6 +983,7 @@ class BluetoothRepository(private val context: Context) {
     }
 
     fun setDsee(enabled: Boolean) {
+        scope.launch(Dispatchers.IO) {
         val bytes = byteArrayOf(
             V2Command.DSEE_SET,
             0x01.toByte(),
@@ -933,10 +995,12 @@ class BluetoothRepository(private val context: Context) {
             },
             bytes = bytes
         )
+            }
     }
 
     fun setAutoPowerOff(index: Int) {
-        if (index !in 0..5) return
+        scope.launch(Dispatchers.IO) {
+        if (index !in 0..5) return@launch
         val codes = arrayOf(
             Pair(0x11, 0x00), // Off
             Pair(0x00, 0x00), // 5 min
@@ -958,9 +1022,11 @@ class BluetoothRepository(private val context: Context) {
             },
             bytes = bytes
         )
+            }
     }
 
     fun setSpeakToChat(enabled: Boolean) {
+        scope.launch(Dispatchers.IO) {
         // SET f8 0c <enabled? 0:1> 01 (inverted bit on v2)
         val bytes = byteArrayOf(
             V2Command.BTNMODE_SET,
@@ -974,9 +1040,11 @@ class BluetoothRepository(private val context: Context) {
             },
             bytes = bytes
         )
+            }
     }
 
     fun setAdaptiveVolume(enabled: Boolean) {
+        scope.launch(Dispatchers.IO) {
         // SET f8 0a <enabled? 0:1> (inverted)
         val bytes = byteArrayOf(
             V2Command.BTNMODE_SET,
@@ -989,6 +1057,7 @@ class BluetoothRepository(private val context: Context) {
             },
             bytes = bytes
         )
+            }
     }
 
     private fun updateError(msg: String) {
