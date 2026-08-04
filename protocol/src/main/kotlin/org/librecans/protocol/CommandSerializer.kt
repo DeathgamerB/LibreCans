@@ -10,7 +10,6 @@ object CommandSerializer {
     const val ESCAPED_61: Byte = 45
     const val ESCAPED_62: Byte = 46
     const val MAX_STEPS_WH_1000_XM3 = 19
-    const val MINIMUM_VOICE_FOCUS_STEP = 2
     const val ASM_LEVEL_DISABLED: Byte = -1
 
     class Message(
