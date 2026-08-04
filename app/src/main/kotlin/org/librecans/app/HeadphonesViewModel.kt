@@ -188,6 +188,7 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
 
     fun disconnectDevice() {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            delay(200)
             connectionService?.repository?.disconnect()
             val context = getApplication<Application>().applicationContext
             val intent = Intent(context, BluetoothConnectionService::class.java)
