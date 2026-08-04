@@ -418,9 +418,13 @@ class BluetoothRepository(private val context: Context) {
 
                     if (payload.size >= 10) {
                         clearBass = (payload[4].toInt() and 0xFF) - 10
-                        bands = List(5) { i ->
-                            (payload[5 + i].toInt() and 0xFF) - 10
-                        }
+                        bands = listOf(
+                            (payload[5].toInt() and 0xFF) - 10,
+                            (payload[6].toInt() and 0xFF) - 10,
+                            (payload[7].toInt() and 0xFF) - 10,
+                            (payload[8].toInt() and 0xFF) - 10,
+                            (payload[9].toInt() and 0xFF) - 10
+                        )
                     }
 
                     _deviceState.value = state.copy(
@@ -749,9 +753,13 @@ class BluetoothRepository(private val context: Context) {
                     val preset = EqPreset.fromByte(bytes[2])
                     if (preset == EqPreset.MANUAL && bytes.size >= 10) {
                         val clearBass = (bytes[4].toInt() and 0xFF) - 10
-                        val bands = List(5) { i ->
-                            (bytes[5 + i].toInt() and 0xFF) - 10
-                        }
+                        val bands = listOf(
+                            (bytes[5].toInt() and 0xFF) - 10,
+                            (bytes[6].toInt() and 0xFF) - 10,
+                            (bytes[7].toInt() and 0xFF) - 10,
+                            (bytes[8].toInt() and 0xFF) - 10,
+                            (bytes[9].toInt() and 0xFF) - 10
+                        )
                         _deviceState.value = state.copy(
                             eqPreset = EqPreset.MANUAL,
                             eqClearBass = clearBass,
@@ -937,7 +945,13 @@ class BluetoothRepository(private val context: Context) {
             }
             Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
 
-            val targetBands = List(5) { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
+            val targetBands = listOf(
+                if (0 < bands.size) bands[0].coerceIn(-10, 10) else 0,
+                if (1 < bands.size) bands[1].coerceIn(-10, 10) else 0,
+                if (2 < bands.size) bands[2].coerceIn(-10, 10) else 0,
+                if (3 < bands.size) bands[3].coerceIn(-10, 10) else 0,
+                if (4 < bands.size) bands[4].coerceIn(-10, 10) else 0
+            )
 
             updateStateOptimistically(
                 update = { current ->
