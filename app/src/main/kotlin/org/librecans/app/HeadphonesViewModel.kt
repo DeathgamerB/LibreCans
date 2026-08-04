@@ -106,12 +106,12 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
             val filter = android.content.IntentFilter().apply {
                 addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
             }
-            // Use ContextCompat to safely specify RECEIVER_EXPORTED flag, preventing SecurityException crash on Android 14+ (API 34/35)
+            // Use ContextCompat to safely specify RECEIVER_NOT_EXPORTED flag, preventing SecurityException crash on Android 14+ (API 34/35) while maintaining security
             ContextCompat.registerReceiver(
                 context,
                 bluetoothReceiver,
                 filter,
-                ContextCompat.RECEIVER_EXPORTED
+                ContextCompat.RECEIVER_NOT_EXPORTED
             )
             isReceiverRegistered = true
 
