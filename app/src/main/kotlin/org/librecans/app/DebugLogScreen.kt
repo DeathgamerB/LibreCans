@@ -1,10 +1,9 @@
 package org.librecans.app
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.widget.Toast
-import androidx.core.content.FileProvider
-import java.io.File
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -63,33 +62,21 @@ fun DebugLogScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Share Logs Button (Expressive spring shape)
+                // Copy Logs Button (Expressive spring shape)
                 val copyInteraction = remember { MutableInteractionSource() }
                 Button(
                     onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val fullLogText = logs.joinToString("\n")
-                        val tempFile = File(context.cacheDir, "bluetooth_diagnostics_shared.log")
-                        tempFile.writeText(fullLogText)
-
-                        val uri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            tempFile
-                        )
-
-                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_STREAM, uri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        val shareIntent = Intent.createChooser(sendIntent, "Share Logs")
-                        context.startActivity(shareIntent)
+                        val clip = ClipData.newPlainText("LibreCans Debug Log", fullLogText)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "Logs copied to clipboard!", Toast.LENGTH_SHORT).show()
                     },
                     interactionSource = copyInteraction,
                     modifier = Modifier.weight(1f).bounceClick(copyInteraction),
                     shape = RoundedCornerShape(topStart = 12.dp, topEnd = 24.dp, bottomEnd = 12.dp, bottomStart = 16.dp)
                 ) {
-                    Text("Share Logs", fontWeight = FontWeight.Bold)
+                    Text("Copy Logs", fontWeight = FontWeight.Bold)
                 }
 
                 // Clear Logs Button (Expressive shape)

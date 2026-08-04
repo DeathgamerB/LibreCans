@@ -34,23 +34,20 @@ object ByteMagic {
         return result
     }
 
-    private val HEX_CHARS = "0123456789abcdef".toCharArray()
-
     fun macBytesToString(addr: ByteArray): String {
         if (addr.size < 6) {
             throw IllegalArgumentException("MAC bytes must be at least 6 bytes")
         }
-        val chars = CharArray(17)
+        val sb = StringBuilder()
         // C++: addr[MAC_ADDR_BYTES_LEN - 1 - i]
         for (i in 0 until 6) {
             val b = addr[5 - i].toInt() and 0xFF
-            val hexOffset = i * 3
-            chars[hexOffset] = HEX_CHARS[b ushr 4]
-            chars[hexOffset + 1] = HEX_CHARS[b and 0x0F]
-            if (i < 5) {
-                chars[hexOffset + 2] = ':'
-            }
+            sb.append(String.format("%02x", b))
+            sb.append(':')
         }
-        return String(chars)
+        if (sb.isNotEmpty()) {
+            sb.setLength(sb.length - 1)
+        }
+        return sb.toString()
     }
 }

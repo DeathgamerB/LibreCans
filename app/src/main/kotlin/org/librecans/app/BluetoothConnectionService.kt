@@ -11,7 +11,6 @@ import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.bluetooth.BluetoothAdapter
 import android.util.Log
 import android.Manifest
 import android.content.pm.PackageManager
@@ -91,11 +90,7 @@ class BluetoothConnectionService : Service() {
             repository.disconnect()
             stopSelf()
         } else if (macAddress != null) {
-            if (BluetoothAdapter.checkBluetoothAddress(macAddress)) {
-                repository.connect(macAddress)
-            } else {
-                Log.w(TAG, "Invalid MAC address provided: $macAddress")
-            }
+            repository.connect(macAddress)
         }
 
         if (hasBluetoothConnectPermission() && !isForeground) {

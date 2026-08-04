@@ -105,7 +105,7 @@ fun MainDashboard(
             )
 
             // Equalizer Controls Card (Gated behind v2 protocol or mock check)
-            val supportsEq = state.protocolVersion == org.librecans.protocol.SonyProtocolVersion.V2 || state.deviceName.contains("Mock")
+            val supportsEq = state.protocolVersion == org.librecans.protocol.SonyProtocolVersion.V2 || viewModel.connectionState.value.deviceName.contains("Mock")
             if (supportsEq) {
                 EqualizerControl(
                     eqPreset = state.eqPreset,

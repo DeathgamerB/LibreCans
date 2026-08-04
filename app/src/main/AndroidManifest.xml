@@ -21,6 +21,8 @@
         android:enableOnBackInvokedCallback="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
 
+        <!-- MainActivity must be exported to be launched by the OS.
+             It has been audited and does not process incoming Intent extras or deep links. -->
         <activity
             android:name="org.librecans.app.MainActivity"
             android:exported="true"
@@ -36,16 +38,6 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
-
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
 
     </application>
 
