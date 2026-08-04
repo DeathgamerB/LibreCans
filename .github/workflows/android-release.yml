@@ -67,11 +67,14 @@ jobs:
         keyPassword: ${{ secrets.RELEASE_KEY_PASSWORD }}
         buildToolsVersion: 35.0.0
 
+    - name: Rename APK
+      run: mv ${{ steps.sign_app.outputs.signedFile }} LibreCans.apk
+
     - name: Upload Signed Release APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: LibreCans-Signed-Release-APK
-        path: ${{ steps.sign_app.outputs.signedFile }}
+        path: LibreCans.apk
 
     - name: Set Release Details
       id: release_details
@@ -90,7 +93,7 @@ jobs:
       with:
         tag_name: ${{ env.TAG_NAME }}
         name: ${{ env.RELEASE_NAME }}
-        files: ${{ steps.sign_app.outputs.signedFile }}
+        files: LibreCans.apk
         draft: false
         prerelease: ${{ inputs.release_type == 'Pre-release' }}
       env:
