@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
 
 
 val LocalScrollValue = compositionLocalOf<() -> Int> { { 0 } }
@@ -56,12 +57,30 @@ fun MainDashboard(
                 title = {
                     Text(
                         "LibreCans",
+                        modifier = Modifier.graphicsLayer {
+                            val scroll = scrollState.value.coerceIn(0, 300)
+                            val progress = scroll / 300f
+                            translationX = -progress * 150f
+                            scaleX = 1f - 0.2f * progress
+                            scaleY = 1f - 0.2f * progress
+                            alpha = 1f - progress
+                        },
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.primary
                     )
                 },
                 actions = {
-                    TextButton(onClick = onNavigateToAbout) {
+                    TextButton(
+                        onClick = onNavigateToAbout,
+                        modifier = Modifier.graphicsLayer {
+                            val scroll = scrollState.value.coerceIn(0, 300)
+                            val progress = scroll / 300f
+                            translationX = progress * 150f
+                            scaleX = 1f - 0.2f * progress
+                            scaleY = 1f - 0.2f * progress
+                            alpha = 1f - progress
+                        }
+                    ) {
                         Text("About", fontWeight = FontWeight.Bold)
                     }
                 },
