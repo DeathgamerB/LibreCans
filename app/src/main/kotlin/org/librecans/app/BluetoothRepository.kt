@@ -81,6 +81,21 @@ class BluetoothRepository(private val context: Context) {
 
     companion object {
         private val DispatchScope = Dispatchers.IO
+        private const val HEX_CHARS = "0123456789ABCDEF"
+    }
+
+    private fun ByteArray.toHexSpaceString(): String = buildString(size * 3) {
+        for (b in this@toHexSpaceString) {
+            val v = b.toInt() and 0xFF
+            append(HEX_CHARS[v ushr 4])
+            append(HEX_CHARS[v and 0x0F])
+            append(' ')
+        }
+    }
+
+    private fun Byte.toHexStr(): String {
+        val v = this.toInt() and 0xFF
+        return "${HEX_CHARS[v ushr 4]}${HEX_CHARS[v and 0x0F]}"
     }
 
     fun toggleMockMode(enabled: Boolean) {
@@ -340,8 +355,8 @@ class BluetoothRepository(private val context: Context) {
 
         // Process actual payloads
         if (msg.dataType == DataType.DATA_MDR && msg.payload.isNotEmpty()) {
-            val op = msg.payload[0]
-            val sub = if (msg.payload.size > 1) msg.payload[1] else -1.toByte()
+            val op = (msg.payload[0]).toByte()
+            val sub = (if (msg.payload.size > 1) msg.payload[1] else -1).toByte()
 
             Log.d(TAG, "Recv DATA_MDR: op=0x${op.toByte().toHexStr()}, sub=0x${sub.toByte().toHexStr()}")
             val payloadHex = msg.payload.toHexStr()
