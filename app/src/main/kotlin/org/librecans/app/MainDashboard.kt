@@ -15,9 +15,29 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
-
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 
 val LocalScrollValue = compositionLocalOf<() -> Int> { { 0 } }
+
+@Composable
+fun Modifier.shrinkAtTop(scrollState: androidx.compose.foundation.ScrollState, topThreshold: Float): Modifier {
+    var yPos by remember { mutableFloatStateOf(0f) }
+    return this
+        .onGloballyPositioned { yPos = it.positionInParent().y }
+        .graphicsLayer {
+            val currentY = yPos - scrollState.value
+            if (currentY < topThreshold) {
+                val overflow = topThreshold - currentY
+                val scale = (1f - (overflow / (400f * density))).coerceAtLeast(0.5f)
+                scaleX = scale
+                scaleY = scale
+                alpha = (1f - (overflow / (400f * density))).coerceAtLeast(0f)
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0.5f)
+            }
+        }
+}
 
 @Composable
 fun OverlayLayout(topBar: @Composable () -> Unit, content: @Composable (Dp) -> Unit) {
@@ -42,6 +62,7 @@ fun MainDashboard(
 ) {
     val state by viewModel.connectionState.collectAsState()
     val scrollState = rememberScrollState()
+    val density = LocalDensity.current
 
     // If connection is lost, navigate back to pairing screen
     LaunchedEffect(state.connected) {
@@ -72,6 +93,7 @@ fun MainDashboard(
         },
         content = { topPadding ->
             CompositionLocalProvider(LocalScrollValue provides { scrollState.value }) {
+                val topThreshold = with(density) { topPadding.toPx() }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -94,6 +116,7 @@ fun MainDashboard(
             )
 
             // ANC/Ambient Controls Card
+            Box(modifier = Modifier.shrinkAtTop(scrollState, topThreshold)) {
             AncAmbientControl(
                 ambientSoundControl = state.ambientSoundControl,
                 asmLevel = state.asmLevel,
@@ -103,10 +126,12 @@ fun MainDashboard(
                     viewModel.setAmbientMode(controlOn, level, focusVoice, sendWrite)
                 }
             )
+            }
 
             // Equalizer Controls Card (Gated behind v2 protocol or mock check)
             val supportsEq = state.protocolVersion == org.librecans.protocol.SonyProtocolVersion.V2 || state.deviceName.contains("Mock")
             if (supportsEq) {
+                Box(modifier = Modifier.shrinkAtTop(scrollState, topThreshold)) {
                 EqualizerControl(
                     eqPreset = state.eqPreset,
                     eqClearBass = state.eqClearBass,
@@ -118,10 +143,11 @@ fun MainDashboard(
                         viewModel.setEqualizerCustom(clearBass, bands, sendWrite)
                     }
                 )
+                }
             } else {
                 // Read-only/No EQ card for older V1 devices
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().shrinkAtTop(scrollState, topThreshold),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
@@ -143,6 +169,7 @@ fun MainDashboard(
             }
 
             // General Settings Card
+            Box(modifier = Modifier.shrinkAtTop(scrollState, topThreshold)) {
             SettingsControl(
                 dsee = state.dsee,
                 hasAutoPowerOff = state.hasAutoPowerOff,
@@ -156,8 +183,10 @@ fun MainDashboard(
                 onSetSpeakToChat = { viewModel.setSpeakToChat(it) },
                 onSetAdaptiveVolume = { viewModel.setAdaptiveVolume(it) }
             )
+            }
 
             // Hardware Information Card
+            Box(modifier = Modifier.shrinkAtTop(scrollState, topThreshold)) {
             HardwareInformationCard(
                 deviceMac = state.deviceMac,
                 protocolVersion = state.protocolVersion,
@@ -166,6 +195,7 @@ fun MainDashboard(
                 hasCodec = state.hasCodec,
                 codec = state.codec
             )
+            }
 
             // Disconnect Button
             Button(
@@ -175,7 +205,8 @@ fun MainDashboard(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 12.dp)
+                    .shrinkAtTop(scrollState, topThreshold),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {

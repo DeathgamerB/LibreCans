@@ -317,7 +317,7 @@ fun DeviceHeroCard(
                             val bottomCrop: Int
 
                             if (isTWS) {
-                                targetScale = (0.95f - (scrollValue / (800 * density))).coerceIn(0.475f, 0.95f)
+                                targetScale = (0.95f - (scrollValue / (800 * density))).coerceIn(0.325f, 0.95f)
                                 topPadding = 0
                                 bottomCrop = (constraints.maxWidth * 0.10f).toInt()
                             } else {
