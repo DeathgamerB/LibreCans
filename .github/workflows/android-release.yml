@@ -4,7 +4,20 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version Name (e.g., 0.2.0)'
+        required: true
+        default: '0.2.0'
+      release_type:
+        description: 'Release Type'
+        required: true
+        type: choice
+        options:
+          - 'Release'
+          - 'Pre-release'
+        default: 'Release'
 
 jobs:
   build-release:
@@ -13,6 +26,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up JDK 21
       uses: actions/setup-java@v4
@@ -27,31 +42,54 @@ jobs:
     - name: Run Unit Tests
       run: ./gradlew test
 
+    - name: Generate Version Code
+      id: version_code
+      run: |
+        TOTAL_COMMITS=$(git rev-list --count HEAD)
+        echo "VERSION_CODE=$TOTAL_COMMITS" >> $GITHUB_ENV
+
     - name: Build Unsigned Release APK
       run: ./gradlew :app:assembleRelease
+      env:
+        VERSION_CODE: ${{ env.VERSION_CODE }}
+        VERSION_NAME: ${{ inputs.version_name || github.ref_name }}
 
     - name: Sign Release APK
       id: sign_app
-      uses: rts-apps/sign-android-release@v1
+      uses: ilharp/sign-android-release@v1
       with:
-        releaseDirectory: app/build/outputs/apk/release
-        signingKeyBase64: ${{ secrets.RELEASE_SIGNING_KEY }}
-        alias: ${{ secrets.RELEASE_KEY_ALIAS }}
+        releaseDir: app/build/outputs/apk/release
+        signingKey: ${{ secrets.RELEASE_SIGNING_KEY }}
+        keyAlias: ${{ secrets.RELEASE_KEY_ALIAS }}
         keyStorePassword: ${{ secrets.RELEASE_STORE_PASSWORD }}
         keyPassword: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        buildToolsVersion: 35.0.0
 
     - name: Upload Signed Release APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: LibreCans-Signed-Release-APK
-        path: ${{ steps.sign_app.outputs.signedReleaseFile }}
+        path: ${{ steps.sign_app.outputs.signedFile }}
+
+    - name: Set Release Details
+      id: release_details
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "TAG_NAME=v${{ inputs.version_name }}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=Release v${{ inputs.version_name }}" >> $GITHUB_ENV
+        else
+          echo "TAG_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=Release ${{ github.ref_name }}" >> $GITHUB_ENV
+        fi
 
     - name: Create GitHub Release
-      if: startsWith(github.ref, 'refs/tags/v')
+      if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
       uses: softprops/action-gh-release@v2
       with:
-        files: ${{ steps.sign_app.outputs.signedReleaseFile }}
+        tag_name: ${{ env.TAG_NAME }}
+        name: ${{ env.RELEASE_NAME }}
+        files: ${{ steps.sign_app.outputs.signedFile }}
         draft: false
-        prerelease: false
+        prerelease: ${{ inputs.release_type == 'Pre-release' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
