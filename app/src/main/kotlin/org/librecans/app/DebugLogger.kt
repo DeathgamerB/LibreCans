@@ -17,6 +17,12 @@ object DebugLogger {
     private val logBuffer = mutableListOf<String>()
     private const val MAX_BUFFER_SIZE = 1000
 
+    private val dateFormat = object : ThreadLocal<SimpleDateFormat>() {
+        override fun initialValue(): SimpleDateFormat {
+            return SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+        }
+    }
+
     var isDebugMode: Boolean = false
         private set
 
@@ -38,7 +44,7 @@ object DebugLogger {
     fun log(context: Context, tag: String, message: String) {
         if (!BuildConfig.DEBUG || !isDebugMode) return
 
-        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
+        val timestamp = dateFormat.get()!!.format(Date())
         val formattedEntry = "[$timestamp] [$tag] $message"
 
         // 1. Add to in-memory buffer
