@@ -21,6 +21,8 @@
         android:enableOnBackInvokedCallback="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
 
+        <!-- MainActivity must be exported to be launched by the OS.
+             It has been audited and does not process incoming Intent extras or deep links. -->
         <activity
             android:name="org.librecans.app.MainActivity"
             android:exported="true"
