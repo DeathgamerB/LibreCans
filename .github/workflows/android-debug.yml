@@ -31,11 +31,33 @@ jobs:
     - name: Run Unit Tests
       run: ./gradlew test
 
-    - name: Build Debug APK
-      run: ./gradlew :app:assembleDebug
+    - name: Generate Version Name
+      id: gen_version
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          echo "VERSION_NAME=0.1.0-pr${PR_NUMBER}-v${{ github.run_number }}" >> $GITHUB_ENV
+        else
+          echo "VERSION_NAME=0.1.0-main-v${{ github.run_number }}" >> $GITHUB_ENV
+        fi
 
-    - name: Upload Debug APK Artifact
+    - name: Build Unsigned Debug APK
+      run: ./gradlew :app:assembleDebug
+      env:
+        VERSION_CODE: ${{ github.run_number }}
+
+    - name: Sign Debug APK
+      id: sign_app
+      uses: rts-apps/sign-android-release@v1
+      with:
+        releaseDirectory: app/build/outputs/apk/debug
+        signingKeyBase64: ${{ secrets.RELEASE_SIGNING_KEY }}
+        alias: ${{ secrets.RELEASE_KEY_ALIAS }}
+        keyStorePassword: ${{ secrets.RELEASE_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+    - name: Upload Signed Debug APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+        name: LibreCans-Signed-Debug-APK
+        path: ${{ steps.sign_app.outputs.signedReleaseFile }}

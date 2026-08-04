@@ -218,43 +218,45 @@ fun PairingScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Debug-gated Mock Mode Box (Clearly Isolated)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .scale(mockScale),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Row(
+                if (BuildConfig.DEBUG) {
+                    // Debug-gated Mock Mode Box (Clearly Isolated)
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .scale(mockScale),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Debug Emulator Mock",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text(
-                                "Simulate WH-CH720N features",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
-                        }
-                        Button(
-                            onClick = {
-                                pressedMock = true
-                                viewModel.toggleMockMode(true)
-                            },
-                            shape = RoundedCornerShape(12.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Simulate")
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Debug Emulator Mock",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                                Text(
+                                    "Simulate WH-CH720N features",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 12.sp
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                    pressedMock = true
+                                    viewModel.toggleMockMode(true)
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Simulate")
+                            }
                         }
                     }
                 }
