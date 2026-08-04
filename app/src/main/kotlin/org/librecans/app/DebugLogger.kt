@@ -2,7 +2,10 @@ package org.librecans.app
 
 import android.content.Context
 import org.librecans.app.BuildConfig
+import android.content.SharedPreferences
 import android.util.Log
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -10,7 +13,7 @@ import java.util.Date
 import java.util.Locale
 
 object DebugLogger {
-    private const val PREFS_NAME = "librecans_debug_prefs"
+    private const val PREFS_NAME = "librecans_debug_prefs_encrypted"
     private const val KEY_DEBUG_MODE = "debug_mode_enabled"
     private const val LOG_FILE_NAME = "bluetooth_diagnostics.log"
 
@@ -20,14 +23,28 @@ object DebugLogger {
     var isDebugMode: Boolean = false
         private set
 
+    private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        return EncryptedSharedPreferences.create(
+            context,
+            PREFS_NAME,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
     fun initialize(context: Context) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = getEncryptedSharedPreferences(context)
         isDebugMode = prefs.getBoolean(KEY_DEBUG_MODE, false)
     }
 
     fun toggleDebugMode(context: Context, enabled: Boolean) {
         isDebugMode = enabled
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = getEncryptedSharedPreferences(context)
         prefs.edit().putBoolean(KEY_DEBUG_MODE, enabled).apply()
         if (!enabled) {
             clearLogs(context)

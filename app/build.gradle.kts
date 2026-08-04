@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.security.crypto)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
