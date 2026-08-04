@@ -58,8 +58,9 @@ fun MainDashboard(
                     Text(
                         "LibreCans",
                         modifier = Modifier.graphicsLayer {
-                            val scroll = scrollState.value.coerceIn(0, 300)
-                            val progress = scroll / 300f
+                            val startThreshold = 95f * density
+                            val scroll = (scrollState.value - startThreshold).coerceIn(0f, 510f)
+                            val progress = scroll / 510f
                             translationX = -progress * 150f
                             scaleX = 1f - 0.2f * progress
                             scaleY = 1f - 0.2f * progress
@@ -73,8 +74,9 @@ fun MainDashboard(
                     TextButton(
                         onClick = onNavigateToAbout,
                         modifier = Modifier.graphicsLayer {
-                            val scroll = scrollState.value.coerceIn(0, 300)
-                            val progress = scroll / 300f
+                            val startThreshold = 95f * density
+                            val scroll = (scrollState.value - startThreshold).coerceIn(0f, 510f)
+                            val progress = scroll / 510f
                             translationX = progress * 150f
                             scaleX = 1f - 0.2f * progress
                             scaleY = 1f - 0.2f * progress
