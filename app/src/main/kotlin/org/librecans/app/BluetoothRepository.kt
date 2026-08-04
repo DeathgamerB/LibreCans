@@ -46,7 +46,7 @@ class BluetoothRepository(private val context: Context) {
     val deviceState: StateFlow<BluetoothDeviceState> = _deviceState.asStateFlow()
 
     init {
-        val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = PrefsHelper.getEncryptedPrefs(context, AMBIENT_PREFS_NAME)
         val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
         val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
         _deviceState.value = BluetoothDeviceState(
@@ -132,7 +132,7 @@ class BluetoothRepository(private val context: Context) {
         if (isMockMode) return
         disconnect()
 
-        val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = PrefsHelper.getEncryptedPrefs(context, AMBIENT_PREFS_NAME)
         val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
         val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
 
@@ -832,7 +832,7 @@ class BluetoothRepository(private val context: Context) {
             val usedLevel = if (level > 0) level else 1
 
             if (controlOn && level > 0) {
-                val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+                val prefs = PrefsHelper.getEncryptedPrefs(context, AMBIENT_PREFS_NAME)
                 prefs.edit()
                     .putInt(KEY_ASM_LEVEL, level)
                     .putBoolean(KEY_FOCUS_ON_VOICE, focusVoice)
