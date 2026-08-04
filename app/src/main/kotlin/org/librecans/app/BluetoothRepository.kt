@@ -26,13 +26,16 @@ class BluetoothRepository(private val context: Context) {
     private val KEY_ASM_LEVEL = "ambient_sound_level"
     private val KEY_FOCUS_ON_VOICE = "focus_on_voice"
 
+    private val ambientPrefs by lazy {
+        context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
     private val _deviceState = MutableStateFlow(BluetoothDeviceState())
     val deviceState: StateFlow<BluetoothDeviceState> = _deviceState.asStateFlow()
 
     init {
-        val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
-        val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
-        val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
+        val storedLevel = ambientPrefs.getInt(KEY_ASM_LEVEL, 20)
+        val storedFocus = ambientPrefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
         _deviceState.value = BluetoothDeviceState(
             asmLevel = storedLevel,
             focusOnVoice = storedFocus
@@ -116,9 +119,8 @@ class BluetoothRepository(private val context: Context) {
         if (isMockMode) return
         disconnect()
 
-        val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
-        val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
-        val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
+        val storedLevel = ambientPrefs.getInt(KEY_ASM_LEVEL, 20)
+        val storedFocus = ambientPrefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
 
         _deviceState.value = BluetoothDeviceState(
             connecting = true,
@@ -816,8 +818,7 @@ class BluetoothRepository(private val context: Context) {
             val usedLevel = if (level > 0) level else 1
 
             if (controlOn && level > 0) {
-                val prefs = context.getSharedPreferences(AMBIENT_PREFS_NAME, Context.MODE_PRIVATE)
-                prefs.edit()
+                ambientPrefs.edit()
                     .putInt(KEY_ASM_LEVEL, level)
                     .putBoolean(KEY_FOCUS_ON_VOICE, focusVoice)
                     .apply()

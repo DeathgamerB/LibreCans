@@ -70,3 +70,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
+dependencies {
+    testImplementation(libs.junit)
+}
