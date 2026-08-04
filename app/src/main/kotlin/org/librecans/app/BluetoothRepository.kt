@@ -65,6 +65,21 @@ class BluetoothRepository(private val context: Context) {
 
     companion object {
         private val DispatchScope = Dispatchers.IO
+        private const val HEX_CHARS = "0123456789ABCDEF"
+    }
+
+    private fun ByteArray.toHexSpaceString(): String = buildString(size * 3) {
+        for (b in this@toHexSpaceString) {
+            val v = b.toInt() and 0xFF
+            append(HEX_CHARS[v ushr 4])
+            append(HEX_CHARS[v and 0x0F])
+            append(' ')
+        }
+    }
+
+    private fun Byte.toHexStr(): String {
+        val v = this.toInt() and 0xFF
+        return "${HEX_CHARS[v ushr 4]}${HEX_CHARS[v and 0x0F]}"
     }
 
     fun toggleMockMode(enabled: Boolean) {
@@ -324,15 +339,15 @@ class BluetoothRepository(private val context: Context) {
 
         // Process actual payloads
         if (msg.dataType == DataType.DATA_MDR && msg.payload.isNotEmpty()) {
-            val op = msg.payload[0]
-            val sub = if (msg.payload.size > 1) msg.payload[1] else -1.toByte()
+            val op = (msg.payload[0]).toByte()
+            val sub = (if (msg.payload.size > 1) msg.payload[1] else -1).toByte()
 
-            Log.d(TAG, "Recv DATA_MDR: op=0x${String.format("%02X", op)}, sub=0x${String.format("%02X", sub)}")
-            val payloadHex = msg.payload.joinToString("") { String.format("%02X ", it) }
-            DebugLogger.log(context, "BluetoothRepository", "Received DATA_MDR: op=0x${String.format("%02X", op)} sub=0x${String.format("%02X", sub)} | payload hex: $payloadHex")
+            Log.d(TAG, "Recv DATA_MDR: op=0x${op.toHexStr()}, sub=0x${sub.toHexStr()}")
+            val payloadHex = msg.payload.toHexSpaceString()
+            DebugLogger.log(context, "BluetoothRepository", "Received DATA_MDR: op=0x${op.toHexStr()} sub=0x${sub.toHexStr()} | payload hex: $payloadHex")
 
             // Complete any pending deferables
-            val keySub = "0x${String.format("%02X", op)}_0x${String.format("%02X", sub)}"
+            val keySub = "0x${op.toHexStr()}_0x${sub.toHexStr()}"
             val deferredSub = pendingSubtypeResponses.remove(keySub)
             if (deferredSub != null) {
                 deferredSub.complete(msg.payload)
@@ -662,10 +677,10 @@ class BluetoothRepository(private val context: Context) {
         val outStream = socket?.outputStream ?: throw IOException("Socket is closed")
         synchronized(ioMutex) {
             val packed = CommandSerializer.packageDataForBt(bytes, DataType.DATA_MDR, seqNumber++)
-            val hexStr = packed.joinToString("") { String.format("%02X ", it) }
+            val hexStr = packed.toHexSpaceString()
             Log.d(TAG, "Writing packed frame to BluetoothSocket: size=${packed.size} bytes, frame hex=$hexStr")
 
-            val payloadHex = bytes.joinToString("") { String.format("%02X ", it) }
+            val payloadHex = bytes.toHexSpaceString()
             DebugLogger.log(context, "BluetoothRepository", "Writing command payload (size=${bytes.size} bytes) hex: $payloadHex | packed frame hex: $hexStr")
 
             outStream.write(packed)
@@ -712,7 +727,7 @@ class BluetoothRepository(private val context: Context) {
     ): ByteArray {
         val deferred = CompletableDeferred<ByteArray>()
         if (retSubType != null) {
-            val keySub = "0x${String.format("%02X", retCommandId)}_0x${String.format("%02X", retSubType)}"
+            val keySub = "0x${retCommandId.toHexStr()}_0x${retSubType.toHexStr()}"
             pendingSubtypeResponses[keySub] = deferred
         } else {
             pendingResponses[retCommandId] = deferred
