@@ -168,7 +168,7 @@ fun EqualizerControl(
                         .fillMaxWidth()
                         .padding(top = 16.dp)
                 ) {
-                    Divider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 12.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 12.dp))
 
                     // 5 frequency bands
                     for (i in 0 until 5) {
