@@ -926,7 +926,15 @@ class BluetoothRepository(private val context: Context) {
             }
 
             val packedBytes = out.toByteArray()
-            val payloadHex = packedBytes.joinToString("") { String.format("%02X ", it) }
+            val payloadHex = buildString(packedBytes.size * 3) {
+                val hexChars = "0123456789ABCDEF"
+                for (b in packedBytes) {
+                    val v = b.toInt() and 0xFF
+                    append(hexChars[v ushr 4])
+                    append(hexChars[v and 0x0F])
+                    append(' ')
+                }
+            }
             Log.d(TAG, "setEqualizerCustom: clearBass=$clearBass, bands=$bands -> packing command payload hex=$payloadHex")
 
             val targetBands = (0 until 5).map { i -> if (i < bands.size) bands[i].coerceIn(-10, 10) else 0 }
