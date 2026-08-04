@@ -187,10 +187,12 @@ class HeadphonesViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun disconnectDevice() {
-        connectionService?.repository?.disconnect()
-        val context = getApplication<Application>().applicationContext
-        val intent = Intent(context, BluetoothConnectionService::class.java)
-        context.stopService(intent)
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            connectionService?.repository?.disconnect()
+            val context = getApplication<Application>().applicationContext
+            val intent = Intent(context, BluetoothConnectionService::class.java)
+            context.stopService(intent)
+        }
     }
 
     fun toggleMockMode(enabled: Boolean) {

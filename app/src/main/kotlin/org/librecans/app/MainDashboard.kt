@@ -169,7 +169,10 @@ fun MainDashboard(
 
             // Disconnect Button
             Button(
-                onClick = { viewModel.disconnectDevice() },
+                onClick = {
+                    onNavigateToPairing()
+                    viewModel.disconnectDevice()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp),

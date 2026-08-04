@@ -76,6 +76,7 @@ fun PairingScreen(
     // Automatically navigate to Main if connected
     LaunchedEffect(state.connected) {
         if (state.connected) {
+            kotlinx.coroutines.delay(200)
             onNavigateToMain()
         }
     }
