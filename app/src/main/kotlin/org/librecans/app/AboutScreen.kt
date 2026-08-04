@@ -45,7 +45,7 @@ fun AboutScreen(
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Version 1.0.0",
+                text = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

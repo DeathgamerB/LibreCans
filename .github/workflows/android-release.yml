@@ -7,14 +7,17 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'Version Name (e.g., 0.1.0)'
+        description: 'Version Name (e.g., 0.2.0)'
         required: true
-        default: '0.1.0'
-      is_prerelease:
-        description: 'Is this a Pre-release?'
-        required: false
-        type: boolean
-        default: false
+        default: '0.2.0'
+      release_type:
+        description: 'Release Type'
+        required: true
+        type: choice
+        options:
+          - 'Release'
+          - 'Pre-release'
+        default: 'Release'
 
 jobs:
   build-release:
@@ -23,6 +26,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up JDK 21
       uses: actions/setup-java@v4
@@ -37,10 +42,16 @@ jobs:
     - name: Run Unit Tests
       run: ./gradlew test
 
+    - name: Generate Version Code
+      id: version_code
+      run: |
+        TOTAL_COMMITS=$(git rev-list --count HEAD)
+        echo "VERSION_CODE=$TOTAL_COMMITS" >> $GITHUB_ENV
+
     - name: Build Unsigned Release APK
       run: ./gradlew :app:assembleRelease
       env:
-        VERSION_CODE: ${{ github.run_number }}
+        VERSION_CODE: ${{ env.VERSION_CODE }}
         VERSION_NAME: ${{ inputs.version_name || github.ref_name }}
 
     - name: Sign Release APK
@@ -79,6 +90,6 @@ jobs:
         name: ${{ env.RELEASE_NAME }}
         files: ${{ steps.sign_app.outputs.signedFile }}
         draft: false
-        prerelease: ${{ inputs.is_prerelease == true }}
+        prerelease: ${{ inputs.release_type == 'Pre-release' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

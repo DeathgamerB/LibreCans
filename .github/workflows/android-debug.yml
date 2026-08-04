@@ -17,6 +17,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up JDK 21
       uses: actions/setup-java@v4
@@ -31,20 +33,48 @@ jobs:
     - name: Run Unit Tests
       run: ./gradlew test
 
-    - name: Generate Version Name
+    - name: Generate Version Name and Code
       id: gen_version
       run: |
+        TOTAL_COMMITS=$(git rev-list --count HEAD)
+
+        # Get the latest tag (or default to v0.1.0)
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
+
+        # Strip the 'v' prefix
+        BASE_VERSION=${LATEST_TAG#v}
+
+        # Split into semantic parts
+        IFS='.' read -r -a VERSION_PARTS <<< "$BASE_VERSION"
+        MAJOR=${VERSION_PARTS[0]}
+        MINOR=${VERSION_PARTS[1]}
+        PATCH=${VERSION_PARTS[2]}
+
+        # Determine number of commits since that tag
+        COMMITS_SINCE_TAG=$(git rev-list --count ${LATEST_TAG}..HEAD 2>/dev/null || echo "0")
+
+        # We always build debugs with an incremented patch version relative to the last tag
+        # unless COMMITS_SINCE_TAG is 0 (which only happens if we are exactly on the tag).
+        if [ "$COMMITS_SINCE_TAG" -gt "0" ]; then
+           PATCH=$((PATCH + 1))
+        fi
+
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           PR_NUMBER="${{ github.event.pull_request.number }}"
-          echo "VERSION_NAME=0.1.0-pr${PR_NUMBER}-v${{ github.run_number }}" >> $GITHUB_ENV
+          # Only count commits from the PR branch head down to the base ref
+          BASE_SHA=${{ github.event.pull_request.base.sha }}
+          PR_COMMITS=$(git rev-list --count $BASE_SHA..HEAD 2>/dev/null || echo "1")
+          echo "VERSION_NAME=${MAJOR}.${MINOR}.${PATCH}-pr${PR_NUMBER}-v${PR_COMMITS}" >> $GITHUB_ENV
         else
-          echo "VERSION_NAME=0.1.0-main-v${{ github.run_number }}" >> $GITHUB_ENV
+          echo "VERSION_NAME=${MAJOR}.${MINOR}.${PATCH}-main-v${COMMITS_SINCE_TAG}" >> $GITHUB_ENV
         fi
+
+        echo "VERSION_CODE=$TOTAL_COMMITS" >> $GITHUB_ENV
 
     - name: Build Unsigned Debug APK
       run: ./gradlew :app:assembleDebug
       env:
-        VERSION_CODE: ${{ github.run_number }}
+        VERSION_CODE: ${{ env.VERSION_CODE }}
 
     - name: Sign Debug APK
       id: sign_app
