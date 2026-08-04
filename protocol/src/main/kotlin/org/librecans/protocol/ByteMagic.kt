@@ -1,7 +1,5 @@
 package org.librecans.protocol
 
-import java.io.ByteArrayOutputStream
-
 object ByteMagic {
     fun byteOrderSwap(num: Int): Int {
         return (num ushr 24) or
