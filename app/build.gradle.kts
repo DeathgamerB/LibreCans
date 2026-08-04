@@ -62,7 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     implementation(libs.kotlinx.coroutines.core)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     androidTestImplementation(platform(libs.androidx.compose.bom))
