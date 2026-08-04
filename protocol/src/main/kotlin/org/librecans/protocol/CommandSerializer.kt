@@ -2,7 +2,7 @@ package org.librecans.protocol
 
 import java.io.ByteArrayOutputStream
 
-open class RecoverableException(message: String, val shouldDisconnect: Boolean = false) : Exception(message)
+open class RecoverableException(message: String) : Exception(message)
 
 object CommandSerializer {
     const val ESCAPED_BYTE_SENTRY: Byte = 61
@@ -11,6 +11,7 @@ object CommandSerializer {
     const val ESCAPED_62: Byte = 46
     const val MAX_STEPS_WH_1000_XM3 = 19
     const val ASM_LEVEL_DISABLED: Byte = -1
+    const val MINIMUM_VOICE_FOCUS_STEP = 2
 
     class Message(
         val dataType: DataType,
@@ -116,13 +117,13 @@ object CommandSerializer {
                 (unescaped[5].toInt() and 0xFF)
 
         if (unescaped.size < 6 + dataSize + 1) {
-            throw RecoverableException("Invalid message: declared size exceeds received data", true)
+            throw RecoverableException("Invalid message: declared size exceeds received data")
         }
 
         val receivedChecksum = unescaped[6 + dataSize]
         val calculatedChecksum = sumChecksum(unescaped, 0, 6 + dataSize)
         if (receivedChecksum != calculatedChecksum) {
-            throw RecoverableException("Invalid checksum!", true)
+            throw RecoverableException("Invalid checksum!")
         }
 
         val payload = ByteArray(dataSize)
