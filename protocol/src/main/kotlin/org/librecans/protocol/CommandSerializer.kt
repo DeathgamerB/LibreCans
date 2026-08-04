@@ -20,7 +20,7 @@ object CommandSerializer {
     )
 
     fun escapeSpecials(src: ByteArray): ByteArray {
-        val out = ByteArrayOutputStream()
+        val out = ByteArrayOutputStream(src.size)
         for (b in src) {
             when (b.toInt()) {
                 60 -> {
@@ -44,7 +44,7 @@ object CommandSerializer {
     }
 
     fun unescapeSpecials(src: ByteArray): ByteArray {
-        val out = ByteArrayOutputStream()
+        val out = ByteArrayOutputStream(src.size)
         var i = 0
         while (i < src.size) {
             val currByte = src[i]
@@ -76,7 +76,7 @@ object CommandSerializer {
     }
 
     fun packageDataForBt(src: ByteArray, dataType: DataType, seqNumber: Byte): ByteArray {
-        val toEscape = ByteArrayOutputStream()
+        val toEscape = ByteArrayOutputStream(src.size + 6)
         toEscape.write(dataType.value.toInt())
         toEscape.write(seqNumber.toInt())
         val sizeBytes = ByteMagic.intToBytesBE(src.size)
@@ -92,7 +92,7 @@ object CommandSerializer {
 
         val escaped = escapeSpecials(fullUnescaped)
 
-        val out = ByteArrayOutputStream()
+        val out = ByteArrayOutputStream(escaped.size + 2)
         out.write(Constants.START_MARKER.toInt())
         out.write(escaped)
         out.write(Constants.END_MARKER.toInt())
