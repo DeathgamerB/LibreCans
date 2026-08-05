@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Flat background color extracted from the original icon design.
+         Reused by ic_launcher_background.png; kept here as a named color
+         in case you want it elsewhere (e.g. a matching splash screen). -->
+    <color name="ic_launcher_background">#383D44</color>
+</resources>
