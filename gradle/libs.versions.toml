@@ -9,7 +9,7 @@ composeBom = "2026.06.01"
 coroutines = "1.11.0"
 
 [libraries]
-androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version = "1.0.0" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version = "1.1.0-alpha06" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
