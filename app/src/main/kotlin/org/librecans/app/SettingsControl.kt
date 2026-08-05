@@ -20,6 +20,9 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,7 +72,13 @@ fun SettingsControl(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { isFeaturesExpanded = !isFeaturesExpanded }
+                        .clickable(
+                            onClickLabel = if (isFeaturesExpanded) "Collapse" else "Expand",
+                            role = Role.Button
+                        ) { isFeaturesExpanded = !isFeaturesExpanded }
+                        .semantics {
+                            stateDescription = if (isFeaturesExpanded) "Expanded" else "Collapsed"
+                        }
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -426,7 +435,13 @@ fun HardwareInformationCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { isHardwareExpanded = !isHardwareExpanded }
+                        .clickable(
+                            onClickLabel = if (isHardwareExpanded) "Collapse" else "Expand",
+                            role = Role.Button
+                        ) { isHardwareExpanded = !isHardwareExpanded }
+                        .semantics {
+                            stateDescription = if (isHardwareExpanded) "Expanded" else "Collapsed"
+                        }
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
