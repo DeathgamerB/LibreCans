@@ -18,6 +18,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlin.math.roundToInt
@@ -139,7 +142,13 @@ fun EqualizerControl(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { isSlidersExpanded = !isSlidersExpanded }
+                        .clickable(
+                            onClickLabel = if (isSlidersExpanded) "Collapse" else "Expand",
+                            role = Role.Button
+                        ) { isSlidersExpanded = !isSlidersExpanded }
+                        .semantics {
+                            stateDescription = if (isSlidersExpanded) "Expanded" else "Collapsed"
+                        }
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
