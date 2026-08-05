@@ -87,12 +87,32 @@ jobs:
           echo "RELEASE_NAME=Release ${{ github.ref_name }}" >> $GITHUB_ENV
         fi
 
+    - name: Generate Release Notes
+      id: generate_release_notes
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          # For manual trigger, HEAD does not have the new tag yet
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        else
+          # For tag push, HEAD is the new tag, so we need the tag before HEAD
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        fi
+
+        if [ -z "$PREV_TAG" ]; then
+          # If no previous tag, get all commits
+          git log --pretty=format:"* %s%n%b" | grep -v "^$" > release_notes.txt
+        else
+          # Get all commits from previous tag to HEAD
+          git log ${PREV_TAG}..HEAD --pretty=format:"* %s%n%b" | grep -v "^$" > release_notes.txt
+        fi
+
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ env.TAG_NAME }}
         name: ${{ env.RELEASE_NAME }}
+        body_path: release_notes.txt
         files: LibreCans.apk
         draft: false
         prerelease: ${{ inputs.release_type == 'Pre-release' }}
