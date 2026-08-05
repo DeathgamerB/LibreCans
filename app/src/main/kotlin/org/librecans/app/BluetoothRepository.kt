@@ -43,13 +43,15 @@ class BluetoothRepository(private val context: Context) {
     private val KEY_ASM_LEVEL = "ambient_sound_level"
     private val KEY_FOCUS_ON_VOICE = "focus_on_voice"
 
+    // Cached SharedPreferences instance to prevent repeated disk I/O and XML parsing during connection and mode changes.
+    private val cachedPrefs by lazy { PrefsHelper.getEncryptedPrefs(context, AMBIENT_PREFS_NAME) }
+
     private val _deviceState = MutableStateFlow(BluetoothDeviceState())
     val deviceState: StateFlow<BluetoothDeviceState> = _deviceState.asStateFlow()
 
     init {
-        val prefs = PrefsHelper.getEncryptedPrefs(context, AMBIENT_PREFS_NAME)
-        val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
-        val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
+        val storedLevel = cachedPrefs.getInt(KEY_ASM_LEVEL, 20)
+        val storedFocus = cachedPrefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
         _deviceState.value = BluetoothDeviceState(
             asmLevel = storedLevel,
             focusOnVoice = storedFocus
@@ -148,9 +150,8 @@ class BluetoothRepository(private val context: Context) {
         if (isMockMode) return
         disconnect()
 
-        val prefs = PrefsHelper.getEncryptedPrefs(context, AMBIENT_PREFS_NAME)
-        val storedLevel = prefs.getInt(KEY_ASM_LEVEL, 20)
-        val storedFocus = prefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
+        val storedLevel = cachedPrefs.getInt(KEY_ASM_LEVEL, 20)
+        val storedFocus = cachedPrefs.getBoolean(KEY_FOCUS_ON_VOICE, false)
 
         _deviceState.value = BluetoothDeviceState(
             connecting = true,
@@ -848,8 +849,7 @@ class BluetoothRepository(private val context: Context) {
             val usedLevel = if (level > 0) level else 1
 
             if (controlOn && level > 0) {
-                val prefs = PrefsHelper.getEncryptedPrefs(context, AMBIENT_PREFS_NAME)
-                prefs.edit()
+                cachedPrefs.edit()
                     .putInt(KEY_ASM_LEVEL, level)
                     .putBoolean(KEY_FOCUS_ON_VOICE, focusVoice)
                     .apply()
