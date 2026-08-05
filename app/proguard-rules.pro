@@ -1,2 +1,2 @@
--dontwarn com.google.errorprone.annotations.Immutable
--dontwarn javax.annotation.concurrent.GuardedBy
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**
