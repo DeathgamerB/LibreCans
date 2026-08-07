@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -272,14 +273,19 @@ fun DeviceItemRow(
     isConnecting: Boolean = false,
     onClick: () -> Unit
 ) {
+    val deviceName = device.name ?: "Sony Headset"
+    val isTWS = deviceName.startsWith("WF-", ignoreCase = true) || deviceName.contains("LinkBuds", ignoreCase = true)
     val interactionSource = remember { MutableInteractionSource() }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .bounceClick(interactionSource)
             .clickable(
                 interactionSource = interactionSource,
-                indication = null
+                indication = null,
+                onClickLabel = "Connect to $deviceName",
+                role = Role.Button
             ) { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -290,9 +296,6 @@ fun DeviceItemRow(
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val deviceName = device.name ?: "Sony Headset"
-            val isTWS = deviceName.startsWith("WF-", ignoreCase = true) || deviceName.contains("LinkBuds", ignoreCase = true)
-
             Image(
                 painter = painterResource(id = if (isTWS) R.drawable.ic_device_earbuds else R.drawable.ic_device_headphones),
                 contentDescription = if (isTWS) "Earbuds" else "Headphones",

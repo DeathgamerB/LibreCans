@@ -1,0 +1,3 @@
+## 2024-08-07 - Screen Reader Context for Modifier.clickable
+**Learning:** When building custom interactive components in Jetpack Compose (like Cards acting as list items via `Modifier.clickable`), the default semantics lack context for screen readers. They announce as a generic clickable area, not communicating the action (e.g., "Connect") or the component type (e.g., "Button").
+**Action:** Always chain `onClickLabel` with a descriptive verb (e.g., "Connect to [Device]") and `role = Role.Button` within `Modifier.clickable` on custom interactive elements to provide complete context to users relying on TalkBack.
