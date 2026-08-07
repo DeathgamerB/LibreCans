@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.Alignment
@@ -198,6 +199,7 @@ fun EqualizerControl(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Slider(
+                                modifier = Modifier.weight(1f).semantics { contentDescription = "Equalizer Band Slider for $label" },
                                 value = sliderValue,
                                 onValueChange = { newValue ->
                                     val intValue = newValue.roundToInt().coerceIn(-10, 10)
@@ -218,8 +220,7 @@ fun EqualizerControl(
                                     onSetCustomEq(eqClearBass, newBands, true)
                                 },
                                 valueRange = -10f..10f,
-                                steps = 19,
-                                modifier = Modifier.weight(1f)
+                                steps = 19
                             )
                             Text(
                                 text = (if (sliderValue.roundToInt() > 0) "+" else "") + sliderValue.roundToInt().toString(),
@@ -249,6 +250,7 @@ fun EqualizerControl(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Slider(
+                            modifier = Modifier.weight(1f).semantics { contentDescription = "Clear Bass Slider" },
                             value = cbSliderValue,
                             onValueChange = { newValue ->
                                 val intValue = newValue.roundToInt()
@@ -262,8 +264,7 @@ fun EqualizerControl(
                                 onSetCustomEq(cbSliderValue.roundToInt(), eqBands, true)
                             },
                             valueRange = -10f..10f,
-                            steps = 19,
-                            modifier = Modifier.weight(1f)
+                            steps = 19
                         )
                         Text(
                             text = (if (cbSliderValue.roundToInt() > 0) "+" else "") + cbSliderValue.roundToInt().toString(),
