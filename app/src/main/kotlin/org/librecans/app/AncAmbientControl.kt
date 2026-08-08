@@ -198,6 +198,7 @@ fun AncAmbientControl(
                                     )
                                 }
                                 Switch(
+                                    modifier = Modifier.semantics { contentDescription = "Toggle Focus on Voice" },
                                     checked = focusOnVoice,
                                     onCheckedChange = { checked ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)

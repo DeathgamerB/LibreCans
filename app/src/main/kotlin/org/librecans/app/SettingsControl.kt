@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -126,6 +127,7 @@ fun SettingsControl(
                                 )
                             }
                             Switch(
+                                modifier = Modifier.semantics { contentDescription = "Toggle DSEE" },
                                 checked = dsee,
                             onCheckedChange = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -207,6 +209,7 @@ fun SettingsControl(
                                     )
                                 }
                                 Switch(
+                                    modifier = Modifier.semantics { contentDescription = "Toggle Speak-to-Chat" },
                                     checked = speakToChat,
                                 onCheckedChange = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -237,6 +240,7 @@ fun SettingsControl(
                                     )
                                 }
                                 Switch(
+                                    modifier = Modifier.semantics { contentDescription = "Toggle Adaptive Volume" },
                                     checked = adaptiveVolume,
                                 onCheckedChange = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)

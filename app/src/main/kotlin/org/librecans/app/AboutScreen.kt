@@ -10,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import org.librecans.app.BuildConfig
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -161,6 +163,7 @@ fun AboutScreen(
                                 )
                             }
                             Switch(
+                                modifier = Modifier.semantics { contentDescription = "Toggle Debug Diagnostics" },
                                 checked = isDebugEnabled,
                                 onCheckedChange = { checked ->
                                     DebugLogger.toggleDebugMode(context, checked)
