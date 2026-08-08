@@ -25,10 +25,10 @@ jobs:
 
         if [ -z "$LATEST_TAG" ]; then
           # If no tags exist, just get all commits
-          NEW_COMMITS=$(git log --pretty=format:"* %s%n%b" | grep -v "^$")
+          NEW_COMMITS=$(git log --pretty=format:"* %s%n%b" | grep -v "^$" || true)
         else
           # Get commits since latest tag
-          NEW_COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"* %s%n%b" | grep -v "^$")
+          NEW_COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"* %s%n%b" | grep -v "^$" || true)
         fi
 
         if [ -z "$NEW_COMMITS" ]; then
