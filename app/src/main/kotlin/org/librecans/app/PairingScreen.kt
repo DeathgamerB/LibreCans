@@ -30,6 +30,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.core.content.ContextCompat
 
 @Composable
@@ -320,6 +322,7 @@ fun DeviceItemRow(
                 Spacer(modifier = Modifier.weight(1f))
                 CircularProgressIndicator(
                     modifier = Modifier
+                        .semantics { contentDescription = "Connecting" }
                         .testTag("loading_state")
                         .size(24.dp),
                     strokeWidth = 2.dp,
