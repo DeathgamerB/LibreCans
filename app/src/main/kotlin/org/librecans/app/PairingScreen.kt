@@ -26,6 +26,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -321,6 +323,7 @@ fun DeviceItemRow(
                 CircularProgressIndicator(
                     modifier = Modifier
                         .testTag("loading_state")
+                        .semantics { contentDescription = "Connecting" }
                         .size(24.dp),
                     strokeWidth = 2.dp,
                     color = MaterialTheme.colorScheme.primary
