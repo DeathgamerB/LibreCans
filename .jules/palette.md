@@ -4,3 +4,6 @@
 ## 2026-08-08 - Adding accessibility semantic labels to Compose Switches
 **Learning:** By default, standard Jetpack Compose `Switch` components without text labels lack contextual semantic information for screen readers like TalkBack, making them read only as "switch, off/on" without explaining what the switch controls (e.g. Adaptive Volume).
 **Action:** When adding or auditing standalone `Switch` components (especially those without explicit programmatic label linkages), manually add `Modifier.semantics { contentDescription = "..." }` to ensure they are fully accessible to screen-reader users.
+## 2026-08-13 - Adding accessibility semantic labels to Compose CircularProgressIndicator
+**Learning:** By default, standard Jetpack Compose indeterminate `CircularProgressIndicator` components lack contextual semantic information for screen readers like TalkBack, which means connecting or loading states are not properly announced to screen reader users.
+**Action:** When adding or auditing standalone `CircularProgressIndicator` components (like in connection screens), manually add `Modifier.semantics { contentDescription = "..." }` (e.g. "Connecting") to ensure the loading state is fully accessible to screen-reader users.
