@@ -96,10 +96,10 @@ jobs:
     - name: Upload Signed Release APK Artifact
       if: steps.check_commits.outputs.has_commits == 'true'
       uses: actions/upload-artifact@v4
+      continue-on-error: true
       with:
         name: LibreCans-Signed-Nightly-APK
         path: LibreCans.apk
-        continue-on-error: true
       env:
         GH_TOKEN: ${{ github.token }}
 

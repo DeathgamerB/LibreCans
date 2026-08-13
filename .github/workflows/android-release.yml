@@ -72,13 +72,13 @@ jobs:
 
     - name: Upload Signed Release APK Artifact
       uses: actions/upload-artifact@v4
+      continue-on-error: true
       with:
         name: LibreCans-Signed-Release-APK
         path: LibreCans.apk
 
       env:
         GH_TOKEN: ${{ github.token }}
-      continue-on-error: true
     - name: Set Release Details
       id: release_details
       run: |

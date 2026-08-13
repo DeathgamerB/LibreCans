@@ -92,9 +92,9 @@ jobs:
 
     - name: Upload Signed Debug APK Artifact
       uses: actions/upload-artifact@v4
+      continue-on-error: true
       env:
         GH_TOKEN: ${{ github.token }}
       with:
         name: LibreCans-Signed-Debug-APK
-        continue-on-error: true
         path: LibreCans.apk
