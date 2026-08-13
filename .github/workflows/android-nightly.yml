@@ -42,7 +42,7 @@ jobs:
 
     - name: Set up JDK 21
       if: steps.check_commits.outputs.has_commits == 'true'
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '21'
         distribution: 'temurin'
@@ -99,6 +99,9 @@ jobs:
       with:
         name: LibreCans-Signed-Nightly-APK
         path: LibreCans.apk
+        continue-on-error: true
+      env:
+        GH_TOKEN: ${{ github.token }}
 
     - name: Create GitHub Pre-release
       if: steps.check_commits.outputs.has_commits == 'true'
