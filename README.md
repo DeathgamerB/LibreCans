@@ -1,9 +1,20 @@
-# LibreCans
+<p align="center">
+  <img src="docs/images/logo.png" width="128" alt="LibreCans logo">
+</p>
+
+<h1 align="center">LibreCans</h1>
 
 LibreCans is an independent Android app for Sony headphones, written in Kotlin with Jetpack Compose
 and Material 3 Expressive. It talks to the headphones directly over Bluetooth: no account, no
 cloud, no tracking. It is developed and tested with the **WF-1000XM5** and works with other Sony
 headphones that use the MDR v2 protocol (WH-1000XM5, WF-1000XM4, LinkBuds S, WH-CH720N and more).
+
+<p align="center">
+  <img src="docs/images/dashboard.png" width="24%" alt="Dashboard with batteries, noise control and playback">
+  <img src="docs/images/equalizer.png" width="24%" alt="Equalizer with presets and a custom 5-band curve">
+  <img src="docs/images/touch-controls.png" width="24%" alt="Touch controls per earbud">
+  <img src="docs/images/device-settings.png" width="24%" alt="Device settings">
+</p>
 
 ## Features
 
