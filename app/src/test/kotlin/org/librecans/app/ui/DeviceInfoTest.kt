@@ -39,7 +39,7 @@ class DeviceInfoTest {
         compose.onNodeWithTag("info_firmware").assertExists()
         compose.onNodeWithText("ABC123").assertExists()
         compose.onNodeWithTag("screen_list").performScrollToNode(hasText("Made by"))
-        compose.onNodeWithText("DeathgamerB").assertExists()
+        compose.onNodeWithText("bjakra").assertExists()
     }
 
     @Test

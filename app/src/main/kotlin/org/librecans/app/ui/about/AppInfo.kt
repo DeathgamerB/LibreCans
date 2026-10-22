@@ -18,8 +18,8 @@ import org.librecans.app.ui.components.InfoItem
 import org.librecans.app.ui.components.NavigationItem
 import org.librecans.app.ui.components.segmentedGroup
 
-const val SOURCE_URL = "https://github.com/DeathgamerB/LibreCans"
-private const val AUTHOR = "DeathgamerB"
+const val SOURCE_URL = "https://github.com/bjakra/LibreCans"
+private const val AUTHOR = "bjakra"
 
 /** Who made LibreCans, where its code lives and its license, followed by credits and the disclaimer. */
 fun LazyListScope.appInfoSection(title: String, onOpenSource: () -> Unit, showVersion: Boolean = true) {
