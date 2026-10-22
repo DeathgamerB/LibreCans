@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.librecans.app.R
 import org.librecans.app.ui.common.appViewModel
 import org.librecans.app.ui.common.label
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.AppScaffold
 import org.librecans.app.ui.components.OptionsSheet
 import org.librecans.protocol.model.AutoPowerOff
@@ -78,6 +79,7 @@ data class DeviceSettingsActions(
 fun DeviceSettingsScreen(state: DeviceSettingsUiState, onBack: () -> Unit, actions: DeviceSettingsActions) {
     var sheet by rememberSaveable { mutableStateOf<SettingsSheet?>(null) }
     var confirmPowerOff by rememberSaveable { mutableStateOf(false) }
+    val haptics = rememberHaptics()
     val headphones = state.headphones
     val titles = SectionTitles(
         sound = stringResource(R.string.settings_section_sound),
@@ -92,7 +94,10 @@ fun DeviceSettingsScreen(state: DeviceSettingsUiState, onBack: () -> Unit, actio
         if (headphones.supports(Features.POWER_OFF)) {
             item(key = "power_off") {
                 Button(
-                    onClick = { confirmPowerOff = true },
+                    onClick = {
+                        haptics.tap()
+                        confirmPowerOff = true
+                    },
                     shapes = ButtonDefaults.shapes(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -115,6 +120,7 @@ fun DeviceSettingsScreen(state: DeviceSettingsUiState, onBack: () -> Unit, actio
             text = { Text(stringResource(R.string.settings_power_off_confirm_body)) },
             confirmButton = {
                 TextButton(onClick = {
+                    haptics.heavy()
                     confirmPowerOff = false
                     actions.onPowerOff()
                 }) { Text(stringResource(R.string.settings_power_off)) }

@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import org.librecans.app.R
+import org.librecans.app.ui.common.rememberHaptics
 
 /** Position of an item inside a group of segmented list items. */
 data class Segment(val index: Int, val count: Int) {
@@ -32,9 +33,13 @@ fun SwitchItem(
     @DrawableRes icon: Int? = null,
     enabled: Boolean = true,
 ) {
+    val haptics = rememberHaptics()
     SegmentedListItem(
         checked = checked,
-        onCheckedChange = onCheckedChange,
+        onCheckedChange = {
+            haptics.toggle(it)
+            onCheckedChange(it)
+        },
         shapes = segment.shapes(),
         modifier = modifier,
         enabled = enabled,
@@ -68,8 +73,12 @@ fun NavigationItem(
     trailing: (@Composable () -> Unit)? = { Icon(painterResource(R.drawable.ic_chevron_right), null) },
     enabled: Boolean = true,
 ) {
+    val haptics = rememberHaptics()
     SegmentedListItem(
-        onClick = onClick,
+        onClick = {
+            haptics.tap()
+            onClick()
+        },
         shapes = segment.shapes(),
         modifier = modifier,
         enabled = enabled,

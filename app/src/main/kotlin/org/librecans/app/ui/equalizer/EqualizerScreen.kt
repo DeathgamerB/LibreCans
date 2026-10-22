@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.librecans.app.R
 import org.librecans.app.ui.common.appViewModel
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.AppScaffold
 import org.librecans.app.ui.components.CardSurface
 import org.librecans.app.ui.components.IntSlider
@@ -82,9 +83,18 @@ fun EqualizerScreen(
             }
         }
         item(key = "custom_header") {
+            val haptics = rememberHaptics()
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionHeader(customTitle, Modifier.weight(1f))
-                TextButton(onClick = onReset, enabled = available, shapes = ButtonDefaults.shapes(), modifier = Modifier.testTag("eq_reset")) {
+                TextButton(
+                    onClick = {
+                        haptics.confirm()
+                        onReset()
+                    },
+                    enabled = available,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.testTag("eq_reset"),
+                ) {
                     Icon(painterResource(R.drawable.ic_restart_alt), null)
                     Text(stringResource(R.string.action_reset), Modifier.padding(start = 8.dp))
                 }

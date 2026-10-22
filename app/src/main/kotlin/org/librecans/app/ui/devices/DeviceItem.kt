@@ -28,6 +28,7 @@ import org.librecans.app.R
 import org.librecans.app.data.bluetooth.DeviceKind
 import org.librecans.app.data.bluetooth.PairedDevice
 import org.librecans.app.data.connection.ConnectionState
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.Segment
 import org.librecans.app.ui.components.shapes
 
@@ -96,8 +97,12 @@ private fun ConnectableItem(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = rememberHaptics()
     SegmentedListItem(
-        onClick = onClick,
+        onClick = {
+            haptics.tap()
+            onClick()
+        },
         shapes = segment.shapes(),
         modifier = modifier,
         leadingContent = { DeviceAvatar(kind, highlighted = connected || connecting) },
@@ -106,7 +111,12 @@ private fun ConnectableItem(
             when {
                 connecting -> Row(verticalAlignment = Alignment.CenterVertically) {
                     LoadingIndicator(Modifier.size(36.dp).testTag("connecting_indicator"))
-                    IconButton(onClick = onCancel) {
+                    IconButton(
+                        onClick = {
+                            haptics.key()
+                            onCancel()
+                        },
+                    ) {
                         Icon(painterResource(R.drawable.ic_close), stringResource(R.string.action_cancel))
                     }
                 }

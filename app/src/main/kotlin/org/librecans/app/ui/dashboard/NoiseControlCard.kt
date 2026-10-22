@@ -16,13 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import org.librecans.app.R
 import org.librecans.app.ui.common.icon
 import org.librecans.app.ui.common.label
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.common.shortLabel
 import org.librecans.app.ui.components.CardSurface
 import org.librecans.app.ui.components.IntSlider
@@ -77,6 +78,7 @@ fun NoiseControlCard(
             }
         }
 
+        val haptics = rememberHaptics()
         Row(
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp).selectableGroup(),
@@ -85,7 +87,10 @@ fun NoiseControlCard(
                 val selected = control.mode == mode
                 ToggleButton(
                     checked = selected,
-                    onCheckedChange = { onModeChange(mode) },
+                    onCheckedChange = {
+                        if (!selected) haptics.select()
+                        onModeChange(mode)
+                    },
                     shapes = when (index) {
                         0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                         modes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
@@ -122,6 +127,7 @@ private fun AmbientSettings(
     onLevelChange: (level: Int, settled: Boolean) -> Unit,
     onFocusOnVoiceChange: (Boolean) -> Unit,
 ) {
+    val haptics = rememberHaptics()
     Column(Modifier.padding(top = 20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.dashboard_ambient_level), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
@@ -151,7 +157,10 @@ private fun AmbientSettings(
             }
             Switch(
                 checked = control.focusOnVoice,
-                onCheckedChange = onFocusOnVoiceChange,
+                onCheckedChange = {
+                    haptics.toggle(it)
+                    onFocusOnVoiceChange(it)
+                },
                 enabled = focusAvailable,
                 modifier = Modifier.testTag("focus_on_voice"),
             )

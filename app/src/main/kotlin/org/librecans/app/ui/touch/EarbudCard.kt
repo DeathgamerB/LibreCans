@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.librecans.app.R
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.common.touchActionLabel
 import org.librecans.app.ui.common.touchFunctionLabel
 import org.librecans.app.ui.common.touchPresetIcon
@@ -61,7 +62,15 @@ fun EarbudCard(side: TouchSide, onChange: () -> Unit, modifier: Modifier = Modif
                 Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(touchPresetLabel(side.preset), style = MaterialTheme.typography.titleMediumEmphasized)
             }
-            FilledTonalButton(onClick = onChange, shapes = ButtonDefaults.shapes(), modifier = Modifier.testTag("change_${side.key}")) {
+            val haptics = rememberHaptics()
+            FilledTonalButton(
+                onClick = {
+                    haptics.tap()
+                    onChange()
+                },
+                shapes = ButtonDefaults.shapes(),
+                modifier = Modifier.testTag("change_${side.key}"),
+            ) {
                 Text(stringResource(R.string.action_change))
             }
         }

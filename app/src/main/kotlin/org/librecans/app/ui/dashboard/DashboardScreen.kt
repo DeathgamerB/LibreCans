@@ -3,6 +3,7 @@ package org.librecans.app.ui.dashboard
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
@@ -13,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -22,7 +24,9 @@ import org.librecans.app.R
 import org.librecans.app.data.bluetooth.DeviceKind
 import org.librecans.app.data.bluetooth.SonyDevices
 import org.librecans.app.ui.common.appViewModel
+import org.librecans.app.ui.common.codecLabel
 import org.librecans.app.ui.common.eqPresetLabel
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.common.touchPresetLabel
 import org.librecans.app.ui.components.AppScaffold
 import org.librecans.app.ui.components.NavigationItem
@@ -72,22 +76,44 @@ data class DashboardActions(
     val onSimulateTap: () -> Unit = {},
 )
 
+private val HeaderFadeDistance = 48.dp
+private val HeroCollapseDistance = 320.dp
+
 @Composable
 fun DashboardScreen(state: DashboardUiState, actions: DashboardActions) {
     val headphones = state.headphones
     val target = state.connection.target
     val name = headphones.identity.modelName ?: target?.name.orEmpty()
     val kind = target?.kind ?: SonyDevices.kindOf(name).takeIf { name.isNotEmpty() } ?: DeviceKind.EARBUDS
+    val status = listOfNotNull(
+        stringResource(R.string.status_connected),
+        headphones.codec?.let { codecLabel(it) },
+        stringResource(R.string.dashboard_demo_badge).takeIf { target?.isDemo == true },
+    ).joinToString(" · ")
     val customizeTitle = stringResource(R.string.dashboard_section_customize)
+    val density = LocalDensity.current
+    val listState = rememberLazyListState()
+    // How far the hero has scrolled, read only while drawing so scrolling never recomposes.
+    val scrolled = { if (listState.firstVisibleItemIndex > 0) Float.MAX_VALUE else listState.firstVisibleItemScrollOffset.toFloat() }
+    val headerProgress = { (scrolled() / with(density) { HeaderFadeDistance.toPx() }).coerceIn(0f, 1f) }
+    val heroCollapse = { (scrolled() / with(density) { HeroCollapseDistance.toPx() }).coerceIn(0f, 1f) }
+    val haptics = rememberHaptics()
 
-    AppScaffold(title = null) {
+    AppScaffold(
+        title = null,
+        listState = listState,
+        header = { DashboardHeader(name, status, headerProgress) },
+    ) {
         item(key = "hero") {
-            HeroCard(kind, headphones.batteries, headphones.noiseControl?.mode, Modifier.animateItem())
+            HeroCard(kind, headphones.batteries, headphones.noiseControl?.mode, Modifier.animateItem(), heroCollapse)
         }
         if (target?.isDemo == true) {
             item(key = "simulate") {
                 AssistChip(
-                    onClick = actions.onSimulateTap,
+                    onClick = {
+                        haptics.key()
+                        actions.onSimulateTap()
+                    },
                     label = { Text(stringResource(R.string.dashboard_simulate_tap)) },
                     leadingIcon = { Icon(painterResource(R.drawable.ic_touch_app), null, Modifier.size(AssistChipDefaults.IconSize)) },
                     modifier = Modifier.padding(top = 8.dp).testTag("simulate_tap"),
@@ -165,7 +191,10 @@ fun DashboardScreen(state: DashboardUiState, actions: DashboardActions) {
 
         item(key = "disconnect") {
             OutlinedButton(
-                onClick = actions.onDisconnect,
+                onClick = {
+                    haptics.heavy()
+                    actions.onDisconnect()
+                },
                 shapes = ButtonDefaults.shapes(),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.fillMaxWidth().padding(top = 24.dp).testTag("disconnect"),

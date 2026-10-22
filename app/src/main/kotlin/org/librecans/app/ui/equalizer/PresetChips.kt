@@ -18,10 +18,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import org.librecans.app.R
 import org.librecans.app.ui.common.eqPresetLabel
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.protocol.model.EqPreset
 
 @Composable
 fun PresetChips(presets: List<EqPreset>, selectedId: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+    val haptics = rememberHaptics()
     FlowRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -31,7 +33,10 @@ fun PresetChips(presets: List<EqPreset>, selectedId: Int?, onSelect: (Int) -> Un
             val selected = preset.id == selectedId
             FilterChip(
                 selected = selected,
-                onClick = { onSelect(preset.id) },
+                onClick = {
+                    if (!selected) haptics.select()
+                    onSelect(preset.id)
+                },
                 label = { Text(eqPresetLabel(preset.id, preset.name)) },
                 leadingIcon = {
                     AnimatedVisibility(

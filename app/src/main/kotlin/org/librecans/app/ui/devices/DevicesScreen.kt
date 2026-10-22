@@ -22,6 +22,7 @@ import org.librecans.app.data.bluetooth.PairedDevice
 import org.librecans.app.data.connection.ConnectionState
 import org.librecans.app.data.connection.DemoHeadphones
 import org.librecans.app.ui.common.appViewModel
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.AppScaffold
 import org.librecans.app.ui.components.Segment
 import org.librecans.app.ui.components.section
@@ -88,11 +89,18 @@ fun DevicesScreen(state: DevicesUiState, actions: DevicesActions) {
     val bluetooth = state.bluetooth
     val pairedTitle = stringResource(R.string.devices_section_paired)
     val demoTitle = stringResource(R.string.devices_section_demo)
+    val haptics = rememberHaptics()
     AppScaffold(
         title = stringResource(R.string.devices_title),
         subtitle = stringResource(R.string.app_tagline),
         actions = {
-            IconButton(onClick = actions.onOpenAbout, modifier = Modifier.testTag("about")) {
+            IconButton(
+                onClick = {
+                    haptics.tap()
+                    actions.onOpenAbout()
+                },
+                modifier = Modifier.testTag("about"),
+            ) {
                 Icon(painterResource(R.drawable.ic_info), stringResource(R.string.action_about))
             }
         },

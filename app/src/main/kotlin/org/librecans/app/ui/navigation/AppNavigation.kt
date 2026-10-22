@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import org.librecans.app.data.connection.ConnectionState
 import org.librecans.app.ui.about.AboutEntry
 import org.librecans.app.ui.about.DiagnosticsEntry
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.dashboard.DashboardEntry
 import org.librecans.app.ui.devices.DevicesEntry
 import org.librecans.app.ui.equalizer.EqualizerEntry
@@ -85,11 +86,14 @@ fun AppNavigation(connection: StateFlow<ConnectionState>) {
  */
 @Composable
 private fun ConnectionNavigationEffect(connection: StateFlow<ConnectionState>, backStack: NavBackStack<NavKey>) {
+    val haptics = rememberHaptics()
     LaunchedEffect(connection, backStack) {
         var previous: ConnectionState = connection.value
         connection.collect { state ->
             val justConnected = state is ConnectionState.Connected && previous !is ConnectionState.Connected
             val gone = state !is ConnectionState.Connected && previous is ConnectionState.Connected
+            if (justConnected) haptics.confirm()
+            if (state is ConnectionState.Failed && previous !is ConnectionState.Failed) haptics.reject()
             if (justConnected && backStack.lastOrNull() == DevicesRoute) backStack.push(DashboardRoute)
             if (gone && backStack.any { it.needsConnection }) backStack.removeAll { it.needsConnection }
             previous = state

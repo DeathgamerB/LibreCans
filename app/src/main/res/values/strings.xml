@@ -70,6 +70,7 @@
     <string name="dashboard_next">Next track</string>
     <string name="dashboard_previous">Previous track</string>
     <string name="dashboard_section_customize">Customize</string>
+    <string name="dashboard_demo_badge">Demo</string>
     <string name="dashboard_equalizer">Equalizer</string>
     <string name="dashboard_touch_controls">Touch controls</string>
     <string name="dashboard_touch_summary">Left: %1$s · Right: %2$s</string>

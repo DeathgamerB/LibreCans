@@ -12,8 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Text
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.librecans.app.ui.common.rememberHaptics
 
 /** A bottom sheet with a single-choice list, closing itself after a pick. */
 @Composable
@@ -51,11 +52,13 @@ fun <T> OptionsSheet(
                 style = MaterialTheme.typography.titleLargeEmphasized,
                 modifier = Modifier.padding(start = 8.dp, bottom = 16.dp),
             )
+            val haptics = rememberHaptics()
             options.forEachIndexed { index, option ->
                 val isSelected = option == selected
                 SegmentedListItem(
                     selected = isSelected,
                     onClick = {
+                        haptics.select()
                         onSelect(option)
                         scope.launch { state.hide() }.invokeOnCompletion { onDismiss() }
                     },

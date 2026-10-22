@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import org.librecans.app.R
+import org.librecans.app.ui.common.rememberHaptics
 
 private val FIVE_BANDS = listOf("400", "1k", "2.5k", "6.3k", "16k")
 private val TEN_BANDS = listOf("31", "63", "125", "250", "500", "1k", "2k", "4k", "8k", "16k")
@@ -80,6 +81,7 @@ private fun BandSlider(
         SliderState(value = value.toFloat(), steps = range.last - range.first - 1, trackRange = range.first.toFloat()..range.last.toFloat())
     }
     var dragging by remember { mutableStateOf(false) }
+    val haptics = rememberHaptics()
     if (!dragging && state.value.roundToInt() != value) state.value = value.toFloat()
     VerticalSlider(
         state = state,
@@ -87,9 +89,15 @@ private fun BandSlider(
             dragging = true
             val previous = state.value.roundToInt()
             state.value = it
-            if (it.roundToInt() != previous) onValueChange(it.roundToInt())
+            if (it.roundToInt() != previous) {
+                haptics.step()
+                onValueChange(it.roundToInt())
+            }
         },
-        onValueChangeFinished = { dragging = false },
+        onValueChangeFinished = {
+            dragging = false
+            haptics.release()
+        },
         topToBottom = false,
         enabled = enabled,
         track = { SliderDefaults.Track(sliderState = it, enabled = enabled, modifier = Modifier.width(24.dp), drawTick = { _, _ -> }) },

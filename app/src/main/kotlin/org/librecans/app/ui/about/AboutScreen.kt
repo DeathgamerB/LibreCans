@@ -40,8 +40,9 @@ import org.librecans.app.R
 import org.librecans.app.data.settings.AppSettings
 import org.librecans.app.data.settings.ThemeMode
 import org.librecans.app.ui.common.appViewModel
-import org.librecans.app.ui.components.CardSurface
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.AppScaffold
+import org.librecans.app.ui.components.CardSurface
 import org.librecans.app.ui.components.NavigationItem
 import org.librecans.app.ui.components.SwitchItem
 import org.librecans.app.ui.components.segmentedGroup
@@ -231,6 +232,7 @@ private fun ThemeSelector(mode: ThemeMode, onSelect: (ThemeMode) -> Unit, modifi
         Triple(ThemeMode.LIGHT, R.string.theme_light, R.drawable.ic_light_mode),
         Triple(ThemeMode.DARK, R.string.theme_dark, R.drawable.ic_dark_mode),
     )
+    val haptics = rememberHaptics()
     Row(
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
         modifier = modifier.fillMaxWidth().padding(bottom = 8.dp).selectableGroup(),
@@ -238,7 +240,10 @@ private fun ThemeSelector(mode: ThemeMode, onSelect: (ThemeMode) -> Unit, modifi
         options.forEachIndexed { index, (value, label, icon) ->
             ToggleButton(
                 checked = mode == value,
-                onCheckedChange = { onSelect(value) },
+                onCheckedChange = {
+                    if (mode != value) haptics.select()
+                    onSelect(value)
+                },
                 shapes = when (index) {
                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                     options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()

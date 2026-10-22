@@ -15,12 +15,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.graphics.shapes.RoundedPolygon
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.graphics.shapes.RoundedPolygon
 import org.librecans.app.R
 import org.librecans.app.data.bluetooth.DeviceKind
 import org.librecans.app.ui.components.BatteryRing
@@ -30,17 +32,29 @@ import org.librecans.app.ui.devices.artwork
 import org.librecans.protocol.model.Batteries
 import org.librecans.protocol.model.NoiseMode
 
-/** Device artwork on a shape that morphs with the noise mode, above the battery rings. */
+/**
+ * Device artwork on a shape that morphs with the noise mode, above the battery rings. The artwork
+ * shrinks towards the rings to half its size as [collapse] goes from 0 to 1.
+ */
 @Composable
 fun HeroCard(
     kind: DeviceKind,
     batteries: Batteries,
     noiseMode: NoiseMode?,
     modifier: Modifier = Modifier,
+    collapse: () -> Float = { 0f },
 ) {
     CardSurface(modifier = modifier.testTag("hero_card")) {
         Box(
-            modifier = Modifier.fillMaxWidth().height(232.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(232.dp)
+                .graphicsLayer {
+                    val scale = 1f - 0.5f * collapse()
+                    scaleX = scale
+                    scaleY = scale
+                    transformOrigin = TransformOrigin(0.5f, 1f)
+                },
             contentAlignment = Alignment.Center,
         ) {
             MorphingShape(

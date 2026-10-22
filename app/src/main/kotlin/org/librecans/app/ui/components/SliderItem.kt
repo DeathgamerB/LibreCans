@@ -13,11 +13,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.material3.SliderState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
+import org.librecans.app.ui.common.rememberHaptics
 
 /**
  * An integer slider that keeps its own value while dragged, reports intermediate values through
@@ -52,6 +53,7 @@ fun IntSlider(
         )
     }
     var dragging by remember { mutableStateOf(false) }
+    val haptics = rememberHaptics()
     if (!dragging && state.value.roundToInt() != value) state.value = value.toFloat()
     Slider(
         state = state,
@@ -59,10 +61,14 @@ fun IntSlider(
             dragging = true
             val previous = state.value.roundToInt()
             state.value = it
-            if (it.roundToInt() != previous) onValueChange(it.roundToInt())
+            if (it.roundToInt() != previous) {
+                haptics.step()
+                onValueChange(it.roundToInt())
+            }
         },
         onValueChangeFinished = {
             dragging = false
+            haptics.release()
             onValueChangeFinished(state.value.roundToInt())
         },
         enabled = enabled,

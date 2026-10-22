@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.librecans.app.R
 import org.librecans.app.ui.common.ambientCycleLabel
 import org.librecans.app.ui.common.appViewModel
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.common.touchActionLabel
 import org.librecans.app.ui.common.touchFunctionLabel
 import org.librecans.app.ui.common.touchPresetIcon
@@ -71,9 +72,13 @@ fun TouchControlsScreen(
             }
             state.cycleOptions.forEachIndexed { index, function ->
                 item(key = "cycle_$function") {
+                    val haptics = rememberHaptics()
                     SegmentedListItem(
                         selected = state.ambientCycle == function,
-                        onClick = { onSetAmbientCycle(function) },
+                        onClick = {
+                            if (state.ambientCycle != function) haptics.select()
+                            onSetAmbientCycle(function)
+                        },
                         shapes = segmentShapes(index, state.cycleOptions.size),
                         trailingContent = { RadioButton(selected = state.ambientCycle == function, onClick = null) },
                         modifier = Modifier.animateItem().testTag("cycle_$function"),

@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.RoundedPolygon
 
@@ -33,7 +32,8 @@ private const val SPIN_MILLIS = 30_000
 /**
  * A slowly spinning Material shape that morphs and turns with a spring whenever [shape] changes,
  * e.g. to reflect the current noise control mode behind the device artwork. The path is only
- * rebuilt while morphing; the spin just rotates the cached drawing on the render thread.
+ * rebuilt while morphing; the spin is read in the draw phase alone, so it never recomposes,
+ * relayouts or, unlike a rotating graphics layer, floods accessibility with change events.
  */
 @Composable
 fun MorphingShape(
@@ -56,23 +56,21 @@ fun MorphingShape(
     }
     val morph = remember(from, to) { Morph(from, to) }
     val path = remember { Path() }
-    val spin by rememberInfiniteTransition(label = "spin").animateFloat(
+    val spin = rememberInfiniteTransition(label = "spin").animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(tween(SPIN_MILLIS, easing = LinearEasing)),
         label = "spin",
     )
     Spacer(
-        modifier
-            .graphicsLayer { rotationZ = spin }
-            .drawWithCache {
-                val value = progress.value
-                path.rewind()
-                morph.toPath(value, path)
-                path.transform(Matrix().apply { scale(size.width, size.height) })
-                path.translate(size.center - path.getBounds().center)
-                val angle = (turns - 1 + value) * TURN_DEGREES
-                onDrawBehind { rotate(angle) { drawPath(path, color) } }
-            },
+        modifier.drawWithCache {
+            val value = progress.value
+            path.rewind()
+            morph.toPath(value, path)
+            path.transform(Matrix().apply { scale(size.width, size.height) })
+            path.translate(size.center - path.getBounds().center)
+            val angle = (turns - 1 + value) * TURN_DEGREES
+            onDrawBehind { rotate(angle + spin.value) { drawPath(path, color) } }
+        },
     )
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import org.librecans.app.R
 import org.librecans.app.data.connection.ConnectionState
 import org.librecans.app.ui.common.message
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.CardSurface
 import org.librecans.app.ui.components.ShapedIcon
 
@@ -54,7 +55,15 @@ fun StatusCard(
                 )
             }
             action?.let { (label, onClick) ->
-                Button(onClick = onClick, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(top = 4.dp)) {
+                val haptics = rememberHaptics()
+                Button(
+                    onClick = {
+                        haptics.tap()
+                        onClick()
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.padding(top = 4.dp),
+                ) {
                     Text(label)
                 }
             }
@@ -79,8 +88,12 @@ fun FailureCard(failed: ConnectionState.Failed, onRetry: () -> Unit, modifier: M
             )
         }
         if (failed.target != null) {
+            val haptics = rememberHaptics()
             Button(
-                onClick = onRetry,
+                onClick = {
+                    haptics.tap()
+                    onRetry()
+                },
                 shapes = ButtonDefaults.shapes(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error,

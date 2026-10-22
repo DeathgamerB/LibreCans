@@ -28,6 +28,7 @@ import java.util.Locale
 import org.librecans.app.R
 import org.librecans.app.data.diagnostics.LogEntry
 import org.librecans.app.ui.common.appViewModel
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.AppScaffold
 
 @Composable
@@ -47,14 +48,27 @@ fun DiagnosticsEntry(onBack: () -> Unit) {
 @Composable
 fun DiagnosticsScreen(entries: List<LogEntry>, recording: Boolean, onBack: () -> Unit, onShare: () -> Unit, onClear: () -> Unit) {
     val format = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
+    val haptics = rememberHaptics()
     AppScaffold(
         title = stringResource(R.string.diagnostics_title),
         onBack = onBack,
         actions = {
-            IconButton(onClick = onShare, enabled = entries.isNotEmpty()) {
+            IconButton(
+                onClick = {
+                    haptics.tap()
+                    onShare()
+                },
+                enabled = entries.isNotEmpty(),
+            ) {
                 Icon(painterResource(R.drawable.ic_share), stringResource(R.string.diagnostics_share))
             }
-            IconButton(onClick = onClear, enabled = entries.isNotEmpty()) {
+            IconButton(
+                onClick = {
+                    haptics.heavy()
+                    onClear()
+                },
+                enabled = entries.isNotEmpty(),
+            ) {
                 Icon(painterResource(R.drawable.ic_delete), stringResource(R.string.diagnostics_clear))
             }
         },

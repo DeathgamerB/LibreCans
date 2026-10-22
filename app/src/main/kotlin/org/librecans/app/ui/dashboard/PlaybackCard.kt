@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.librecans.app.R
+import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.CardSurface
 import org.librecans.app.ui.components.IntSlider
 import org.librecans.protocol.model.Playback
@@ -33,6 +34,7 @@ fun PlaybackCard(
     modifier: Modifier = Modifier,
 ) {
     val playing = playback.status == PlaybackStatus.PLAYING
+    val haptics = rememberHaptics()
     CardSurface(modifier = modifier.testTag("playback_card")) {
         Text(stringResource(R.string.dashboard_playback_title), style = MaterialTheme.typography.titleMediumEmphasized)
         Row(
@@ -41,14 +43,20 @@ fun PlaybackCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             FilledTonalIconButton(
-                onClick = { onSkip(false) },
+                onClick = {
+                    haptics.key()
+                    onSkip(false)
+                },
                 shapes = IconButtonDefaults.shapes(),
                 modifier = Modifier.size(IconButtonDefaults.mediumContainerSize()),
             ) {
                 Icon(painterResource(R.drawable.ic_skip_previous_filled), stringResource(R.string.dashboard_previous))
             }
             FilledIconButton(
-                onClick = onTogglePlayback,
+                onClick = {
+                    haptics.toggle(!playing)
+                    onTogglePlayback()
+                },
                 shapes = IconButtonDefaults.shapes(),
                 modifier = Modifier
                     .size(IconButtonDefaults.mediumContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide))
@@ -61,7 +69,10 @@ fun PlaybackCard(
                 )
             }
             FilledTonalIconButton(
-                onClick = { onSkip(true) },
+                onClick = {
+                    haptics.key()
+                    onSkip(true)
+                },
                 shapes = IconButtonDefaults.shapes(),
                 modifier = Modifier.size(IconButtonDefaults.mediumContainerSize()),
             ) {
