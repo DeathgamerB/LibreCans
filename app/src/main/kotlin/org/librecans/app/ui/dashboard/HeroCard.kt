@@ -7,8 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,13 +32,16 @@ import org.librecans.app.data.bluetooth.DeviceKind
 import org.librecans.app.ui.components.BatteryRing
 import org.librecans.app.ui.components.CardSurface
 import org.librecans.app.ui.components.MorphingShape
+import org.librecans.app.ui.components.artworkBackdrop
 import org.librecans.app.ui.devices.artwork
 import org.librecans.protocol.model.Batteries
 import org.librecans.protocol.model.NoiseMode
 
+private const val COLLAPSED_SCALE = 0.55f
+
 /**
- * Device artwork on a shape that morphs with the noise mode, above the battery rings. The artwork
- * shrinks towards the rings to half its size as [collapse] goes from 0 to 1.
+ * Device artwork on a shape that morphs with the noise mode, above the battery rings, with an info
+ * button in the corner. The artwork shrinks towards the rings as [collapse] goes from 0 to 1.
  */
 @Composable
 fun HeroCard(
@@ -42,32 +49,42 @@ fun HeroCard(
     batteries: Batteries,
     noiseMode: NoiseMode?,
     modifier: Modifier = Modifier,
+    onOpenInfo: () -> Unit = {},
     collapse: () -> Float = { 0f },
 ) {
     CardSurface(modifier = modifier.testTag("hero_card")) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(232.dp)
-                .graphicsLayer {
-                    val scale = 1f - 0.5f * collapse()
-                    scaleX = scale
-                    scaleY = scale
-                    transformOrigin = TransformOrigin(0.5f, 1f)
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            MorphingShape(
-                shape = noiseMode.heroShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(216.dp),
-            )
-            Image(
-                painter = painterResource(kind.artwork),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.size(176.dp),
-            )
+        Box(Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(232.dp)
+                    .graphicsLayer {
+                        val scale = 1f - (1f - COLLAPSED_SCALE) * collapse()
+                        scaleX = scale
+                        scaleY = scale
+                        transformOrigin = TransformOrigin(0.5f, 1f)
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                MorphingShape(
+                    shape = noiseMode.heroShape,
+                    color = artworkBackdrop(),
+                    modifier = Modifier.size(216.dp),
+                )
+                Image(
+                    painter = painterResource(kind.artwork),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(176.dp),
+                )
+            }
+            FilledTonalIconButton(
+                onClick = onOpenInfo,
+                shapes = IconButtonDefaults.shapes(),
+                modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp).testTag("open_info"),
+            ) {
+                Icon(painterResource(R.drawable.ic_info), stringResource(R.string.dashboard_info))
+            }
         }
         AnimatedVisibility(visible = batteries.isEmpty) {
             Text(

@@ -24,6 +24,7 @@ import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.dashboard.DashboardEntry
 import org.librecans.app.ui.devices.DevicesEntry
 import org.librecans.app.ui.equalizer.EqualizerEntry
+import org.librecans.app.ui.info.DeviceInfoEntry
 import org.librecans.app.ui.settings.DeviceSettingsEntry
 import org.librecans.app.ui.touch.TouchControlsEntry
 
@@ -67,11 +68,13 @@ fun AppNavigation(connection: StateFlow<ConnectionState>) {
                     onOpenEqualizer = { backStack.push(EqualizerRoute) },
                     onOpenTouchControls = { backStack.push(TouchControlsRoute) },
                     onOpenDeviceSettings = { backStack.push(DeviceSettingsRoute) },
+                    onOpenInfo = { backStack.push(DeviceInfoRoute) },
                 )
             }
             entry<EqualizerRoute> { EqualizerEntry(onBack = { backStack.removeLastOrNull() }) }
             entry<TouchControlsRoute> { TouchControlsEntry(onBack = { backStack.removeLastOrNull() }) }
             entry<DeviceSettingsRoute> { DeviceSettingsEntry(onBack = { backStack.removeLastOrNull() }) }
+            entry<DeviceInfoRoute> { DeviceInfoEntry(onBack = { backStack.removeLastOrNull() }) }
             entry<AboutRoute> {
                 AboutEntry(onBack = { backStack.removeLastOrNull() }, onOpenDiagnostics = { backStack.push(DiagnosticsRoute) })
             }

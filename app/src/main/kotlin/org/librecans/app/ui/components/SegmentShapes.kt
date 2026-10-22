@@ -9,7 +9,8 @@ import androidx.compose.runtime.remember
 
 /**
  * Segmented list shapes rounded like the cards around them: the group's outer corners match the
- * cards, inner corners stay soft, and pressed or selected rows round off completely.
+ * cards and inner corners stay soft, so a group reads as one block. Checked or selected rows keep
+ * their place in that block; only a press briefly rounds a row off.
  */
 @Composable
 fun segmentShapes(index: Int, count: Int): ListItemShapes {
@@ -25,7 +26,14 @@ fun segmentShapes(index: Int, count: Int): ListItemShapes {
             bottomStart = if (last) outer.bottomStart else inner.bottomStart,
         )
     }
-    return ListItemDefaults.shapes(shape = shape, pressedShape = outer, selectedShape = outer)
+    return ListItemDefaults.shapes(
+        shape = shape,
+        selectedShape = shape,
+        pressedShape = outer,
+        focusedShape = shape,
+        hoveredShape = shape,
+        draggedShape = shape,
+    )
 }
 
 @Composable

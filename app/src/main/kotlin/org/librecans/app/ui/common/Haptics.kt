@@ -13,11 +13,11 @@ import androidx.compose.ui.platform.LocalHapticFeedback
  */
 @Immutable
 class Haptics(private val feedback: HapticFeedback) {
-    /** Opening a screen, a sheet or a list row. */
-    fun tap() = perform(HapticFeedbackType.ContextClick)
+    /** Opening a screen, a sheet or a list row: a soft click, lighter than picking an option. */
+    fun tap() = perform(HapticFeedbackType.KeyboardTap)
 
-    /** Small transport keys such as play, skip or a simulated earbud tap. */
-    fun key() = perform(HapticFeedbackType.KeyboardTap)
+    /** Transport keys such as skip or a simulated earbud tap: a firm click. */
+    fun key() = perform(HapticFeedbackType.VirtualKey)
 
     /** Picking one of several options. */
     fun select() = perform(HapticFeedbackType.SegmentTick)

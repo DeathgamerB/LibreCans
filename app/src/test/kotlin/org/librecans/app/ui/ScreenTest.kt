@@ -178,7 +178,7 @@ class ScreenTest {
             )
         }
         compose.onNodeWithTag("screen_list").performScrollToNode(hasTestTag("link_touch"))
-        compose.onNodeWithText("Left: Ambient sound control · Right: Playback control").assertIsDisplayed()
+        compose.onNodeWithText("Left: Noise control · Right: Playback").assertIsDisplayed()
         compose.onNodeWithTag("link_touch").performClick()
         assertThat(opened).isEqualTo("touch")
         compose.onNodeWithTag("screen_list").performScrollToNode(hasTestTag("disconnect"))
@@ -193,8 +193,8 @@ class ScreenTest {
         show { TouchControlsScreen(state, onBack = {}, onSetPreset = { key, preset -> change = key to preset }, onSetAmbientCycle = {}) }
 
         compose.onNodeWithTag("screen_list").performScrollToNode(hasTestTag("earbud_1"))
-        compose.onNodeWithText("Play / pause").assertIsDisplayed()
-        compose.onNodeWithTag("change_1").performClick()
+        compose.onNodeWithText("Playback control").assertIsDisplayed()
+        compose.onNodeWithTag("earbud_1").performClick()
         compose.onNodeWithTag("options_sheet").assertIsDisplayed()
         compose.onNodeWithText("Not assigned").performClick()
         assertThat(change).isEqualTo(1 to TouchPresets.NO_FUNCTION)

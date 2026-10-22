@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,12 +43,9 @@ import org.librecans.app.data.settings.ThemeMode
 import org.librecans.app.ui.common.appViewModel
 import org.librecans.app.ui.common.rememberHaptics
 import org.librecans.app.ui.components.AppScaffold
-import org.librecans.app.ui.components.CardSurface
 import org.librecans.app.ui.components.NavigationItem
 import org.librecans.app.ui.components.SwitchItem
 import org.librecans.app.ui.components.segmentedGroup
-
-private const val SOURCE_URL = "https://github.com/DeathgamerB/LibreCans"
 
 @Composable
 fun AboutEntry(onBack: () -> Unit, onOpenDiagnostics: () -> Unit) {
@@ -153,52 +151,7 @@ fun AboutScreen(settings: AppSettings, onBack: () -> Unit, actions: AboutActions
                 }
             }
         }
-        segmentedGroup("info", info) {
-            row("credits") { segment, modifier ->
-                NavigationItem(
-                    title = stringResource(R.string.about_credits),
-                    summary = stringResource(R.string.about_credits_body),
-                    icon = R.drawable.ic_favorite,
-                    onClick = actions.onOpenSource,
-                    trailing = null,
-                    segment = segment,
-                    modifier = modifier,
-                )
-            }
-            row("license") { segment, modifier ->
-                NavigationItem(
-                    title = stringResource(R.string.about_license),
-                    summary = stringResource(R.string.about_license_body),
-                    icon = R.drawable.ic_gavel,
-                    onClick = actions.onOpenSource,
-                    trailing = null,
-                    segment = segment,
-                    modifier = modifier,
-                )
-            }
-            row("source") { segment, modifier ->
-                NavigationItem(
-                    title = stringResource(R.string.about_source),
-                    summary = SOURCE_URL.removePrefix("https://"),
-                    icon = R.drawable.ic_code,
-                    onClick = actions.onOpenSource,
-                    trailing = { Icon(painterResource(R.drawable.ic_open_in_new), null) },
-                    segment = segment,
-                    modifier = modifier,
-                )
-            }
-        }
-        item(key = "disclaimer") {
-            CardSurface(modifier = Modifier.padding(top = 16.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                Text(stringResource(R.string.about_disclaimer_title), style = MaterialTheme.typography.titleSmallEmphasized)
-                Text(
-                    stringResource(R.string.about_disclaimer),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-            }
-        }
+        appInfoSection(info, actions.onOpenSource, showVersion = false)
     }
 }
 
@@ -249,6 +202,8 @@ private fun ThemeSelector(mode: ThemeMode, onSelect: (ThemeMode) -> Unit, modifi
                     options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
+                // Unchecked buttons sit on the page background, so give them the rows' surface.
+                colors = ToggleButtonDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.weight(1f).semantics { role = Role.RadioButton }.testTag("theme_${value.name}"),
             ) {
                 Icon(painterResource(icon), null, Modifier.size(18.dp))

@@ -4,6 +4,8 @@ package org.librecans.protocol.mdr
 object T1 {
     const val CONNECT_GET_PROTOCOL_INFO = 0x00
     const val CONNECT_RET_PROTOCOL_INFO = 0x01
+    const val CONNECT_GET_CAPABILITY_INFO = 0x02
+    const val CONNECT_RET_CAPABILITY_INFO = 0x03
     const val CONNECT_GET_DEVICE_INFO = 0x04
     const val CONNECT_RET_DEVICE_INFO = 0x05
     const val CONNECT_GET_SUPPORT_FUNCTION = 0x06

@@ -86,7 +86,6 @@ fun DeviceSettingsScreen(state: DeviceSettingsUiState, onBack: () -> Unit, actio
         conversation = stringResource(R.string.settings_section_conversation),
         wearing = stringResource(R.string.settings_section_wearing),
         connection = stringResource(R.string.settings_section_connection),
-        device = stringResource(R.string.settings_section_device),
     )
 
     AppScaffold(title = stringResource(R.string.settings_title), onBack = onBack) {
@@ -166,7 +165,7 @@ fun DeviceSettingsScreen(state: DeviceSettingsUiState, onBack: () -> Unit, actio
     }
 }
 
-data class SectionTitles(val sound: String, val conversation: String, val wearing: String, val connection: String, val device: String)
+data class SectionTitles(val sound: String, val conversation: String, val wearing: String, val connection: String)
 
 fun autoPowerOffOptions(state: DeviceSettingsUiState): List<AutoPowerOff> {
     val reported = state.headphones.autoPowerOffOptions

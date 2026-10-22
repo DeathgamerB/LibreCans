@@ -22,6 +22,7 @@ sealed interface DeviceEvent {
     data class ProtocolInfo(val version: Long, val table1: Boolean, val table2: Boolean) : DeviceEvent
     data class ModelName(val name: String) : DeviceEvent
     data class FirmwareVersion(val version: String) : DeviceEvent
+    data class UniqueId(val id: String) : DeviceEvent
     data class SeriesAndColor(val series: Int, val color: Int) : DeviceEvent
     data class SupportedFeatures(val table: Table, val features: Set<Feature>) : DeviceEvent
 

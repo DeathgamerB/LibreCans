@@ -107,6 +107,7 @@ data class VoiceGuidance(val enabled: Boolean? = null, val volume: Int? = null) 
 data class DeviceIdentity(
     val modelName: String? = null,
     val firmware: String? = null,
+    val uniqueId: String? = null,
     val series: Int? = null,
     val color: Int? = null,
 )

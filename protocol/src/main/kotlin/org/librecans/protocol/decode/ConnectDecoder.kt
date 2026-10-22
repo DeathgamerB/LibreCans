@@ -12,6 +12,7 @@ internal object ConnectDecoder {
 
     fun decode(command: Int, r: PayloadReader): DeviceEvent? = when (command) {
         T1.CONNECT_RET_PROTOCOL_INFO -> protocolInfo(r)
+        T1.CONNECT_RET_CAPABILITY_INFO -> uniqueId(r)
         T1.CONNECT_RET_DEVICE_INFO -> deviceInfo(r)
         T1.CONNECT_RET_SUPPORT_FUNCTION -> supportedFeatures(Table.ONE, r)
         else -> null
@@ -23,6 +24,13 @@ internal object ConnectDecoder {
         if (r.remaining < 6) return DeviceEvent.ProtocolInfo(version = 0, table1 = false, table2 = false)
         val version = r.u32()
         return DeviceEvent.ProtocolInfo(version, table1 = r.u8() != DISABLED, table2 = r.u8() != DISABLED)
+    }
+
+    /** Inquired type, a capability counter, then the device's unique ID. */
+    private fun uniqueId(r: PayloadReader): DeviceEvent? {
+        r.u8()
+        r.u8()
+        return r.prefixedString().trim().takeIf { it.isNotEmpty() }?.let(DeviceEvent::UniqueId)
     }
 
     private fun deviceInfo(r: PayloadReader): DeviceEvent? = when (r.u8()) {

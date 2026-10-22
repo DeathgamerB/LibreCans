@@ -2,8 +2,6 @@ package org.librecans.app.ui.touch
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,18 +14,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.librecans.app.R
-import org.librecans.app.ui.common.ambientCycleLabel
 import org.librecans.app.ui.common.appViewModel
-import org.librecans.app.ui.common.rememberHaptics
-import org.librecans.app.ui.common.touchActionLabel
-import org.librecans.app.ui.common.touchFunctionLabel
+import org.librecans.app.ui.common.touchPresetDescription
 import org.librecans.app.ui.common.touchPresetIcon
 import org.librecans.app.ui.common.touchPresetLabel
 import org.librecans.app.ui.components.AppScaffold
+import org.librecans.app.ui.components.NavigationItem
 import org.librecans.app.ui.components.OptionsSheet
-import org.librecans.app.ui.components.SectionHeader
 import org.librecans.app.ui.components.ShapedIcon
-import org.librecans.app.ui.components.segmentShapes
+import org.librecans.app.ui.components.segmentedGroup
+import org.librecans.protocol.model.TouchKeys
 
 @Composable
 fun TouchControlsEntry(onBack: () -> Unit) {
@@ -36,6 +32,7 @@ fun TouchControlsEntry(onBack: () -> Unit) {
     TouchControlsScreen(state, onBack, viewModel::setPreset, viewModel::setAmbientCycle)
 }
 
+/** One row per earbud showing its function; tapping a row picks another one. */
 @Composable
 fun TouchControlsScreen(
     state: TouchControlsUiState,
@@ -44,45 +41,38 @@ fun TouchControlsScreen(
     onSetAmbientCycle: (Int) -> Unit,
 ) {
     var editingKey by rememberSaveable { mutableStateOf<Int?>(null) }
-    val cycleTitle = stringResource(R.string.touch_cycle_title)
+    val earbudsTitle = stringResource(R.string.touch_section_earbuds)
+    val sides = state.sides.map { it to sideTitle(it.key) }
 
     AppScaffold(title = stringResource(R.string.touch_title), onBack = onBack) {
-        item(key = "intro") {
-            Text(
-                stringResource(if (state.available) R.string.touch_intro else R.string.touch_unavailable),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-            )
+        if (!state.available) {
+            item(key = "unavailable") {
+                Text(
+                    stringResource(R.string.touch_unavailable),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
         }
-        state.sides.forEach { side ->
-            item(key = "side_${side.key}") {
-                EarbudCard(side, onChange = { editingKey = side.key }, modifier = Modifier.padding(vertical = 6.dp).animateItem())
+        segmentedGroup("earbuds", earbudsTitle.takeIf { state.available }) {
+            sides.forEach { (side, title) ->
+                row("side_${side.key}") { segment, modifier ->
+                    NavigationItem(
+                        title = title,
+                        summary = touchPresetLabel(side.preset),
+                        leading = { ShapedIcon(touchPresetIcon(side.preset)) },
+                        onClick = { editingKey = side.key },
+                        segment = segment,
+                        modifier = modifier.testTag("earbud_${side.key}"),
+                    )
+                }
             }
         }
         if (state.showCycle) {
-            item(key = "cycle_header") { SectionHeader(cycleTitle, Modifier.animateItem()) }
-            item(key = "cycle_summary") {
-                Text(
-                    stringResource(R.string.touch_cycle_summary),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp).animateItem(),
-                )
-            }
-            state.cycleOptions.forEachIndexed { index, function ->
-                item(key = "cycle_$function") {
-                    val haptics = rememberHaptics()
-                    SegmentedListItem(
-                        selected = state.ambientCycle == function,
-                        onClick = {
-                            if (state.ambientCycle != function) haptics.select()
-                            onSetAmbientCycle(function)
-                        },
-                        shapes = segmentShapes(index, state.cycleOptions.size),
-                        trailingContent = { RadioButton(selected = state.ambientCycle == function, onClick = null) },
-                        modifier = Modifier.animateItem().testTag("cycle_$function"),
-                    ) { Text(stringResource(ambientCycleLabel(function))) }
+            segmentedGroup("cycle", null) {
+                row("cycle") { segment, modifier ->
+                    AmbientCycleMenu(state.ambientCycle, state.cycleOptions, onSetAmbientCycle, segment, modifier.padding(top = 12.dp))
                 }
             }
         }
@@ -91,19 +81,11 @@ fun TouchControlsScreen(
     val side = state.sides.firstOrNull { it.key == editingKey }
     if (side != null) {
         OptionsSheet(
-            title = stringResource(R.string.touch_choose),
+            title = sides.first { it.first.key == side.key }.second,
             options = side.options.map { it.preset },
             selected = side.preset,
             label = { touchPresetLabel(it) },
-            summary = { preset ->
-                val gestures = side.options.firstOrNull { it.preset == preset }?.gestures.orEmpty()
-                if (gestures.isEmpty()) {
-                    stringResource(R.string.touch_no_gestures)
-                } else {
-                    gestures.map { stringResource(R.string.touch_gesture_format, stringResource(touchActionLabel(it.action)), touchFunctionLabel(it.function)) }
-                        .joinToString("\n")
-                }
-            },
+            summary = { touchPresetDescription(it) },
             leading = {
                 ShapedIcon(
                     touchPresetIcon(it),
@@ -116,4 +98,11 @@ fun TouchControlsScreen(
             onDismiss = { editingKey = null },
         )
     }
+}
+
+@Composable
+private fun sideTitle(key: Int): String = when (key) {
+    TouchKeys.LEFT -> stringResource(R.string.touch_left)
+    TouchKeys.RIGHT -> stringResource(R.string.touch_right)
+    else -> stringResource(R.string.touch_key, key + 1)
 }

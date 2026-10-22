@@ -63,6 +63,7 @@ class HeadphonesClient(
         } ?: return InitResult.NO_RESPONSE
         if (!info.table1) return InitResult.UNSUPPORTED_PROTOCOL
 
+        session.send(ConnectRequests.capabilityInfo())
         session.send(ConnectRequests.modelName())
         session.send(ConnectRequests.firmware())
         session.send(ConnectRequests.seriesAndColor())

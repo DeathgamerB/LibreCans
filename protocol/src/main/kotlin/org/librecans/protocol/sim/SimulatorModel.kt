@@ -11,6 +11,7 @@ import org.librecans.protocol.model.TouchPresets as P
 class SimulatorModel {
     var modelName = "WF-1000XM5"
     var firmware = "6.1.0"
+    var uniqueId = "0000DEMO5A17E5"
 
     var leftBattery = 80
     var rightBattery = 76

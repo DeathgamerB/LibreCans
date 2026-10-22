@@ -27,7 +27,7 @@ import org.librecans.app.ui.common.appViewModel
 import org.librecans.app.ui.common.codecLabel
 import org.librecans.app.ui.common.eqPresetLabel
 import org.librecans.app.ui.common.rememberHaptics
-import org.librecans.app.ui.common.touchPresetLabel
+import org.librecans.app.ui.common.touchPresetShortLabel
 import org.librecans.app.ui.components.AppScaffold
 import org.librecans.app.ui.components.NavigationItem
 import org.librecans.app.ui.components.Segment
@@ -41,6 +41,7 @@ fun DashboardEntry(
     onOpenEqualizer: () -> Unit,
     onOpenTouchControls: () -> Unit,
     onOpenDeviceSettings: () -> Unit,
+    onOpenInfo: () -> Unit,
 ) {
     val viewModel = appViewModel { DashboardViewModel(it.headphones) }
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -56,6 +57,7 @@ fun DashboardEntry(
             onOpenEqualizer = onOpenEqualizer,
             onOpenTouchControls = onOpenTouchControls,
             onOpenDeviceSettings = onOpenDeviceSettings,
+            onOpenInfo = onOpenInfo,
             onDisconnect = viewModel::disconnect,
             onSimulateTap = viewModel::simulateTap,
         ),
@@ -72,12 +74,12 @@ data class DashboardActions(
     val onOpenEqualizer: () -> Unit = {},
     val onOpenTouchControls: () -> Unit = {},
     val onOpenDeviceSettings: () -> Unit = {},
+    val onOpenInfo: () -> Unit = {},
     val onDisconnect: () -> Unit = {},
     val onSimulateTap: () -> Unit = {},
 )
 
 private val HeaderFadeDistance = 48.dp
-private val HeroCollapseDistance = 320.dp
 
 @Composable
 fun DashboardScreen(state: DashboardUiState, actions: DashboardActions) {
@@ -96,7 +98,11 @@ fun DashboardScreen(state: DashboardUiState, actions: DashboardActions) {
     // How far the hero has scrolled, read only while drawing so scrolling never recomposes.
     val scrolled = { if (listState.firstVisibleItemIndex > 0) Float.MAX_VALUE else listState.firstVisibleItemScrollOffset.toFloat() }
     val headerProgress = { (scrolled() / with(density) { HeaderFadeDistance.toPx() }).coerceIn(0f, 1f) }
-    val heroCollapse = { (scrolled() / with(density) { HeroCollapseDistance.toPx() }).coerceIn(0f, 1f) }
+    // The artwork keeps shrinking over the hero's whole height, even while it slides under the status bar.
+    val heroCollapse = {
+        val hero = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == "hero" }
+        if (hero == null) 1f else (-hero.offset.toFloat() / hero.size).coerceIn(0f, 1f)
+    }
     val haptics = rememberHaptics()
 
     AppScaffold(
@@ -105,7 +111,17 @@ fun DashboardScreen(state: DashboardUiState, actions: DashboardActions) {
         header = { DashboardHeader(name, status, headerProgress) },
     ) {
         item(key = "hero") {
-            HeroCard(kind, headphones.batteries, headphones.noiseControl?.mode, Modifier.animateItem(), heroCollapse)
+            HeroCard(
+                kind = kind,
+                batteries = headphones.batteries,
+                noiseMode = headphones.noiseControl?.mode,
+                onOpenInfo = {
+                    haptics.tap()
+                    actions.onOpenInfo()
+                },
+                modifier = Modifier.animateItem(),
+                collapse = heroCollapse,
+            )
         }
         if (target?.isDemo == true) {
             item(key = "simulate") {
@@ -162,8 +178,8 @@ fun DashboardScreen(state: DashboardUiState, actions: DashboardActions) {
                         title = stringResource(R.string.dashboard_touch_controls),
                         summary = stringResource(
                             R.string.dashboard_touch_summary,
-                            touchPresetLabel(touch.presets[TouchKeys.LEFT]),
-                            touchPresetLabel(touch.presets[TouchKeys.RIGHT]),
+                            touchPresetShortLabel(touch.presets[TouchKeys.LEFT]),
+                            touchPresetShortLabel(touch.presets[TouchKeys.RIGHT]),
                         ),
                         onClick = actions.onOpenTouchControls,
                         segment = segment,

@@ -70,11 +70,12 @@ class DemoFlowTest {
         connectDemo()
         compose.onNodeWithTag("screen_list").performScrollToNode(hasTestTag("link_touch"))
         compose.onNodeWithTag("link_touch").performClick()
-        compose.waitUntilAtLeastOneExists(hasTestTag("change_1"), timeoutMillis = 5_000)
-        compose.onNodeWithTag("change_1").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("earbud_1"), timeoutMillis = 5_000)
+        compose.onNodeWithTag("earbud_1").performClick()
         compose.waitUntilAtLeastOneExists(hasText("Not assigned"), timeoutMillis = 5_000)
         compose.onNodeWithText("Not assigned").performClick()
-        compose.waitUntilAtLeastOneExists(hasText("Taps do nothing"), timeoutMillis = 5_000)
+        compose.waitUntilDoesNotExist(hasTestTag("options_sheet"), timeoutMillis = 5_000)
+        compose.waitUntilAtLeastOneExists(hasTestTag("earbud_1") and hasText("Not assigned"), timeoutMillis = 5_000)
     }
 
     @Test

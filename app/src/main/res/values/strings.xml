@@ -11,7 +11,6 @@
     <string name="action_switch_noise_mode">Switch noise mode</string>
     <string name="action_about">About</string>
     <string name="action_reset">Reset</string>
-    <string name="action_change">Change</string>
     <string name="unknown">Unknown</string>
 
     <!-- Connection status -->
@@ -48,7 +47,7 @@
     <string name="devices_bluetooth_off_body">Turn on Bluetooth to control your headphones.</string>
     <string name="devices_bluetooth_enable">Turn on</string>
     <string name="devices_demo_title">Demo headphones</string>
-    <string name="devices_demo_body">A simulated WF-1000XM5 that speaks the real protocol</string>
+    <string name="devices_demo_body">Simulated WF-1000XM5</string>
     <string name="devices_section_demo">Testing</string>
 
     <!-- Dashboard -->
@@ -62,7 +61,7 @@
     <string name="dashboard_noise_title">Noise control</string>
     <string name="dashboard_ambient_level">Ambient sound level</string>
     <string name="dashboard_focus_on_voice">Focus on voice</string>
-    <string name="dashboard_focus_on_voice_summary">Lets voices through while filtering other noise</string>
+    <string name="dashboard_focus_on_voice_summary">Hear voices, filter other noise</string>
     <string name="dashboard_playback_title">Playback</string>
     <string name="dashboard_volume">Volume</string>
     <string name="dashboard_play">Play</string>
@@ -75,8 +74,9 @@
     <string name="dashboard_touch_controls">Touch controls</string>
     <string name="dashboard_touch_summary">Left: %1$s · Right: %2$s</string>
     <string name="dashboard_device_settings">Device settings</string>
-    <string name="dashboard_device_settings_summary">Speak-to-Chat, wearing detection, power and more</string>
+    <string name="dashboard_device_settings_summary">Speak-to-Chat, sensors and power</string>
     <string name="dashboard_simulate_tap">Simulate earbud tap</string>
+    <string name="dashboard_info">Headphone and app info</string>
 
     <!-- Noise modes -->
     <string name="noise_mode_nc">Noise canceling</string>
@@ -109,16 +109,13 @@
 
     <!-- Touch controls -->
     <string name="touch_title">Touch controls</string>
-    <string name="touch_intro">Choose what each earbud does when you tap it. Pick “Not assigned” to ignore taps on that side.</string>
     <string name="touch_left">Left earbud</string>
     <string name="touch_right">Right earbud</string>
+    <string name="touch_section_earbuds">Earbuds</string>
     <string name="touch_key">Key %1$d</string>
-    <string name="touch_choose">Choose a function</string>
     <string name="touch_cycle_title">Noise control cycle</string>
-    <string name="touch_cycle_summary">Modes a tap on the ambient sound earbud cycles through</string>
     <string name="touch_unavailable">These headphones do not report customizable touch controls.</string>
     <string name="touch_no_gestures">Taps do nothing</string>
-    <string name="touch_gesture_format">%1$s: %2$s</string>
 
     <string name="touch_preset_ambient">Ambient sound control</string>
     <string name="touch_preset_ambient_quick_access">Ambient sound control + Quick Access</string>
@@ -131,34 +128,21 @@
     <string name="touch_preset_quick_access">Quick Access</string>
     <string name="touch_preset_none">Not assigned</string>
     <string name="touch_preset_unknown">Function %1$s</string>
-
-    <string name="touch_action_tap">Tap</string>
-    <string name="touch_action_double_tap">Double tap</string>
-    <string name="touch_action_triple_tap">Triple tap</string>
-    <string name="touch_action_repeat_tap">Repeated taps</string>
-    <string name="touch_action_hold">Tap and hold</string>
-    <string name="touch_action_double_tap_hold">Double tap and hold</string>
-    <string name="touch_action_long_press">Long press</string>
-
-    <string name="touch_function_none">Nothing</string>
-    <string name="touch_function_nc_asm_off">NC → Ambient → Off</string>
-    <string name="touch_function_nc_asm">NC ↔ Ambient</string>
-    <string name="touch_function_nc_off">NC ↔ Off</string>
-    <string name="touch_function_asm_off">Ambient ↔ Off</string>
-    <string name="touch_function_quick_attention">Quick Attention</string>
-    <string name="touch_function_nc_optimizer">NC Optimizer</string>
-    <string name="touch_function_play_pause">Play / pause</string>
-    <string name="touch_function_next">Next track</string>
-    <string name="touch_function_previous">Previous track</string>
-    <string name="touch_function_volume_up">Volume up</string>
-    <string name="touch_function_volume_down">Volume down</string>
-    <string name="touch_function_voice_assistant">Voice assistant</string>
-    <string name="touch_function_notifications">Read notifications</string>
-    <string name="touch_function_google">Talk to Google</string>
-    <string name="touch_function_alexa">Talk to Alexa</string>
-    <string name="touch_function_spotify">Spotify Tap</string>
-    <string name="touch_function_quick_access">Quick Access</string>
-    <string name="touch_function_other">Function %1$s</string>
+    <string name="touch_short_noise">Noise control</string>
+    <string name="touch_short_playback">Playback</string>
+    <string name="touch_short_track">Tracks</string>
+    <string name="touch_short_volume">Volume</string>
+    <string name="touch_short_assistant">Assistant</string>
+    <string name="touch_short_none">Off</string>
+    <string name="touch_short_custom">Custom</string>
+    <string name="touch_desc_ambient">Switch noise modes, hold to listen in</string>
+    <string name="touch_desc_ambient_quick_access">Noise modes and Quick Access apps</string>
+    <string name="touch_desc_playback">Play, skip and ask your assistant</string>
+    <string name="touch_desc_track">Skip forward and back</string>
+    <string name="touch_desc_volume">Tap for louder, hold for quieter</string>
+    <string name="touch_desc_assistant">Talk to your voice assistant</string>
+    <string name="touch_desc_quick_access">Open your Quick Access apps</string>
+    <string name="touch_desc_custom">Set up in Sony\'s app</string>
 
     <string name="cycle_nc_asm_off">Noise canceling → Ambient → Off</string>
     <string name="cycle_nc_asm">Noise canceling ↔ Ambient sound</string>
@@ -173,13 +157,13 @@
     <string name="settings_section_connection">Connection</string>
     <string name="settings_section_device">About these headphones</string>
     <string name="settings_upscaling">DSEE upscaling</string>
-    <string name="settings_upscaling_summary">Restores detail in compressed music (%1$s)</string>
+    <string name="settings_upscaling_summary">%1$s for compressed music</string>
     <string name="settings_connection_priority">Bluetooth connection quality</string>
     <string name="priority_sound_quality">Prioritize sound quality</string>
     <string name="priority_stable_connection">Prioritize stable connection</string>
     <string name="priority_low_latency">Low latency (beta)</string>
     <string name="settings_speak_to_chat">Speak-to-Chat</string>
-    <string name="settings_speak_to_chat_summary">Pauses music and lets ambient sound in when you talk</string>
+    <string name="settings_speak_to_chat_summary">Pauses music when you talk</string>
     <string name="settings_speak_to_chat_sensitivity">Voice detection sensitivity</string>
     <string name="settings_speak_to_chat_timeout">Mode-off timer</string>
     <string name="sensitivity_auto">Automatic</string>
@@ -190,11 +174,11 @@
     <string name="timeout_long">Long (about 30 s)</string>
     <string name="timeout_never">Don\'t end automatically</string>
     <string name="settings_head_gestures">Head gestures</string>
-    <string name="settings_head_gestures_summary">Nod or shake your head to answer or decline calls</string>
+    <string name="settings_head_gestures_summary">Nod or shake to answer calls</string>
     <string name="settings_adaptive_volume">Adaptive volume</string>
-    <string name="settings_adaptive_volume_summary">Adjusts the volume to your surroundings</string>
+    <string name="settings_adaptive_volume_summary">Adapts volume to your surroundings</string>
     <string name="settings_pause_when_removed">Pause when taken off</string>
-    <string name="settings_pause_when_removed_summary">Pauses playback when you remove the headphones</string>
+    <string name="settings_pause_when_removed_summary">Pauses when you take them off</string>
     <string name="settings_auto_power_off">Automatic power off</string>
     <string name="apo_5_min">After 5 minutes</string>
     <string name="apo_15_min">After 15 minutes</string>
@@ -204,7 +188,7 @@
     <string name="apo_when_removed">When taken off</string>
     <string name="apo_disabled">Never</string>
     <string name="settings_voice_guidance">Voice guidance</string>
-    <string name="settings_voice_guidance_summary">Spoken announcements for modes and battery</string>
+    <string name="settings_voice_guidance_summary">Announces modes and battery</string>
     <string name="settings_voice_guidance_volume">Voice guidance volume</string>
     <string name="settings_power_off">Turn off headphones</string>
     <string name="settings_power_off_confirm_title">Turn off the headphones?</string>
@@ -215,14 +199,17 @@
     <string name="settings_address">Bluetooth address</string>
     <string name="settings_protocol">Protocol</string>
     <string name="settings_protocol_value">MDR v2 (0x%1$s)</string>
+    <string name="settings_device_id">Device ID</string>
+    <string name="settings_upscaling_type">Upscaling</string>
+    <string name="info_section_app">LibreCans</string>
 
     <string name="gs_multipoint">Connect to 2 devices at once</string>
-    <string name="gs_multipoint_summary">Stay connected to two devices and switch between them</string>
-    <string name="gs_multipoint_summary_ldac">Stay connected to two devices. LDAC turns off while two are connected.</string>
+    <string name="gs_multipoint_summary">Switch between two devices</string>
+    <string name="gs_multipoint_summary_ldac">LDAC is off while two are connected</string>
     <string name="gs_sidetone">Capture voice during calls</string>
-    <string name="gs_sidetone_summary">Hear your own voice while you are on a call</string>
+    <string name="gs_sidetone_summary">Hear your own voice on calls</string>
     <string name="gs_touch_panel">Touch sensor control panel</string>
-    <string name="gs_touch_panel_summary">Turn off to ignore all taps on the earbuds</string>
+    <string name="gs_touch_panel_summary">Ignore all earbud taps when off</string>
 
     <string name="codec_sbc" translatable="false">SBC</string>
     <string name="codec_aac" translatable="false">AAC</string>
@@ -238,6 +225,8 @@
     <!-- About -->
     <string name="about_title">About</string>
     <string name="about_version">Version %1$s</string>
+    <string name="about_app_version">Version</string>
+    <string name="about_made_by">Made by</string>
     <string name="about_section_appearance">Appearance</string>
     <string name="about_dynamic_color">Dynamic color</string>
     <string name="about_dynamic_color_summary">Use colors from your wallpaper</string>
@@ -246,12 +235,12 @@
     <string name="theme_dark">Dark</string>
     <string name="about_section_behavior">Behavior</string>
     <string name="about_auto_connect">Connect automatically</string>
-    <string name="about_auto_connect_summary">Connect when the app opens and your headphones are on</string>
+    <string name="about_auto_connect_summary">Connect when the app opens</string>
     <string name="about_keep_connected">Stay connected in the background</string>
-    <string name="about_keep_connected_summary">Shows an ongoing notification and reconnects automatically</string>
+    <string name="about_keep_connected_summary">Reconnects, with a notification</string>
     <string name="about_section_diagnostics">Diagnostics</string>
     <string name="about_diagnostics">Record protocol log</string>
-    <string name="about_diagnostics_summary">Kept in memory only, cleared when turned off</string>
+    <string name="about_diagnostics_summary">Kept in memory, never saved</string>
     <string name="about_view_log">View protocol log</string>
     <string name="about_section_info">Information</string>
     <string name="about_disclaimer_title">Unofficial app</string>

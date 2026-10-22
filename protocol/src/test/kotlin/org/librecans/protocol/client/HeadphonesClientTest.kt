@@ -46,6 +46,7 @@ class HeadphonesClientTest {
 
         assertThat(state.identity.modelName).isEqualTo("WF-1000XM5")
         assertThat(state.identity.firmware).isEqualTo("6.1.0")
+        assertThat(state.identity.uniqueId).isEqualTo("0000DEMO5A17E5")
         assertThat(state.supports(Features.NC_ASM_DUAL)).isTrue()
         assertThat(state.supports(Features.VOICE_GUIDANCE)).isTrue()
         assertThat(state.batteries.left?.percent).isEqualTo(80)

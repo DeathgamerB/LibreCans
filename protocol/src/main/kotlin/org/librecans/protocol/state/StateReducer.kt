@@ -13,6 +13,7 @@ fun HeadphoneState.reduce(event: DeviceEvent): HeadphoneState = when (event) {
     is DeviceEvent.ProtocolInfo -> copy(protocolVersion = event.version)
     is DeviceEvent.ModelName -> copy(identity = identity.copy(modelName = event.name))
     is DeviceEvent.FirmwareVersion -> copy(identity = identity.copy(firmware = event.version))
+    is DeviceEvent.UniqueId -> copy(identity = identity.copy(uniqueId = event.id))
     is DeviceEvent.SeriesAndColor -> copy(identity = identity.copy(series = event.series, color = event.color))
     is DeviceEvent.SupportedFeatures ->
         copy(features = features.filterNot { it.table == event.table }.toSet() + event.features)

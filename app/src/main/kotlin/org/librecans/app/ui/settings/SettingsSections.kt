@@ -4,12 +4,10 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import org.librecans.app.R
-import org.librecans.app.ui.common.codecLabel
 import org.librecans.app.ui.common.generalSettingSummary
 import org.librecans.app.ui.common.generalSettingTitle
 import org.librecans.app.ui.common.label
 import org.librecans.app.ui.components.GroupBuilder
-import org.librecans.app.ui.components.InfoItem
 import org.librecans.app.ui.components.NavigationItem
 import org.librecans.app.ui.components.SliderItem
 import org.librecans.app.ui.components.SwitchItem
@@ -183,32 +181,6 @@ fun LazyListScope.settingsSections(
 
     segmentedGroup("connection", titles.connection) {
         generalSettings.filterNot { it.isConversation() }.forEach { setting -> generalSettingRow(setting, actions) }
-    }
-
-    segmentedGroup("device", titles.device) {
-        h.identity.modelName?.let { name ->
-            row("model") { segment, modifier -> InfoItem(stringResource(R.string.settings_model), name, segment, modifier, R.drawable.ic_headphones) }
-        }
-        h.identity.firmware?.let { firmware ->
-            row("firmware") { segment, modifier -> InfoItem(stringResource(R.string.settings_firmware), firmware, segment, modifier, R.drawable.ic_code) }
-        }
-        h.codec?.let { codec ->
-            row("codec") { segment, modifier -> InfoItem(stringResource(R.string.settings_codec), codecLabel(codec), segment, modifier, R.drawable.ic_graphic_eq) }
-        }
-        state.target?.takeIf { !it.isDemo }?.let { target ->
-            row("address") { segment, modifier -> InfoItem(stringResource(R.string.settings_address), target.address, segment, modifier, R.drawable.ic_bluetooth) }
-        }
-        h.protocolVersion?.let { version ->
-            row("protocol") { segment, modifier ->
-                InfoItem(
-                    stringResource(R.string.settings_protocol),
-                    stringResource(R.string.settings_protocol_value, "%08X".format(version)),
-                    segment,
-                    modifier,
-                    R.drawable.ic_info,
-                )
-            }
-        }
     }
 }
 

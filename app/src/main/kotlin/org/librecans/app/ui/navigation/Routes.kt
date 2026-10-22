@@ -19,6 +19,9 @@ data object TouchControlsRoute : NavKey
 data object DeviceSettingsRoute : NavKey
 
 @Serializable
+data object DeviceInfoRoute : NavKey
+
+@Serializable
 data object AboutRoute : NavKey
 
 @Serializable
@@ -26,4 +29,5 @@ data object DiagnosticsRoute : NavKey
 
 /** Screens that only make sense while headphones are connected. */
 val NavKey.needsConnection: Boolean
-    get() = this == DashboardRoute || this == EqualizerRoute || this == TouchControlsRoute || this == DeviceSettingsRoute
+    get() = this == DashboardRoute || this == EqualizerRoute || this == TouchControlsRoute ||
+        this == DeviceSettingsRoute || this == DeviceInfoRoute

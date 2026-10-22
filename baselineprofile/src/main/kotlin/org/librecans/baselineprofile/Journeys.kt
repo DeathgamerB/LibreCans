@@ -11,6 +11,7 @@ import androidx.test.uiautomator.Until
 val PACKAGE: String = InstrumentationRegistry.getArguments()
     .getString("androidx.benchmark.targetPackageName") ?: "org.librecans.app"
 private const val TIMEOUT = 10_000L
+private const val SHORT_TIMEOUT = 2_000L
 
 /** Opens the demo headphones from the device list and waits for the dashboard. */
 fun MacrobenchmarkScope.openDemoDashboard() {
@@ -19,14 +20,13 @@ fun MacrobenchmarkScope.openDemoDashboard() {
     pressHome()
     startActivityAndWait()
     val demo = device.wait(Until.findObject(By.text("Demo headphones")), TIMEOUT)
-        ?: list().run {
-            scrollUntil(Direction.DOWN, Until.findObject(By.text("Demo headphones")))
-        }
-    demo.click()
+        ?: list()?.scrollUntil(Direction.DOWN, Until.findObject(By.text("Demo headphones")))
+    checkNotNull(demo) { "Demo headphones not found" }.click()
     check(device.wait(Until.hasObject(By.text("Noise control")), TIMEOUT)) { "Dashboard did not open" }
 }
 
-fun MacrobenchmarkScope.list(): UiObject2 = device.wait(Until.findObject(By.scrollable(true)), TIMEOUT)
+/** The screen's list, or null when everything fits and there is nothing to scroll. */
+fun MacrobenchmarkScope.list(timeout: Long = TIMEOUT): UiObject2? = device.wait(Until.findObject(By.scrollable(true)), timeout)
 
 /** Scrolls the current screen to the end and back, the way a user looks through it. */
 fun MacrobenchmarkScope.scrollThrough() {
@@ -38,15 +38,16 @@ fun MacrobenchmarkScope.scrollThrough() {
 
 private fun MacrobenchmarkScope.fling(direction: Direction) {
     // Lists run edge to edge; swipes near the top would pull down the notification shade.
-    list().apply {
-        setGestureMargins(device.displayWidth / 10, device.displayHeight / 4, device.displayWidth / 10, device.displayHeight / 5)
-    }.fling(direction)
+    val list = list(SHORT_TIMEOUT) ?: return
+    list.setGestureMargins(device.displayWidth / 10, device.displayHeight / 4, device.displayWidth / 10, device.displayHeight / 5)
+    list.fling(direction)
     device.waitForIdle()
 }
 
 /** Opens a dashboard link, looks through the screen and returns. */
 fun MacrobenchmarkScope.openAndReturn(text: String) {
-    list().scrollUntil(Direction.DOWN, Until.findObject(By.text(text)))?.click()
+    val link = device.findObject(By.text(text)) ?: list()?.scrollUntil(Direction.DOWN, Until.findObject(By.text(text)))
+    checkNotNull(link) { "$text not found" }.click()
     device.wait(Until.gone(By.text("Customize")), TIMEOUT)
     device.waitForIdle()
     scrollThrough()

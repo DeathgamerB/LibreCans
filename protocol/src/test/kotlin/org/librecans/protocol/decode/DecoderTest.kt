@@ -17,6 +17,17 @@ class DecoderTest {
     private fun decode(vararg bytes: Int, table: Table = Table.ONE) = MdrDecoder.decode(table, payloadOf(*bytes))
 
     @Test
+    fun `capability info carries the unique device id`() {
+        val id = "ABC123".map { it.code }
+        assertThat(decode(0x03, 0x00, 0x01, id.size, *id.toIntArray())).isEqualTo(DeviceEvent.UniqueId("ABC123"))
+    }
+
+    @Test
+    fun `an empty unique id is ignored`() {
+        assertThat(decode(0x03, 0x00, 0x01, 0x00)).isNull()
+    }
+
+    @Test
     fun `assignable capability lists fixed and customizable gestures per key`() {
         val event = decode(
             0xF1, 0x03, 0x01,

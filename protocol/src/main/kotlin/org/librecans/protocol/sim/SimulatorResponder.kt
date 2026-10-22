@@ -26,6 +26,7 @@ class SimulatorResponder(private val model: SimulatorModel) {
         val type = p.getOrElse(1) { -1 }
         when (p[0]) {
             T1.CONNECT_GET_PROTOCOL_INFO -> listOf(listOf(0x01, 0x00, 0x03, 0x00, 0x30, 0x18, 0x00, 0x00))
+            T1.CONNECT_GET_CAPABILITY_INFO -> listOf(listOf(T1.CONNECT_RET_CAPABILITY_INFO, type, 0x01) + text(uniqueId))
             T1.CONNECT_GET_DEVICE_INFO -> listOfNotNull(deviceInfo(type))
             T1.CONNECT_GET_SUPPORT_FUNCTION -> listOf(supportList(T1.CONNECT_RET_SUPPORT_FUNCTION, SimulatorModel.SUPPORT_TABLE1))
             T1.COMMON_GET_STATUS -> listOf(listOf(T1.COMMON_RET_STATUS, Inquired.COMMON_AUDIO_CODEC, 0x02))
