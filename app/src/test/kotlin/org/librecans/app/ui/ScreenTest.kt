@@ -10,6 +10,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -157,6 +159,13 @@ class ScreenTest {
         compose.onNodeWithText("Ambient sound level").assertIsDisplayed()
         compose.onNodeWithTag("mode_NOISE_CANCELLING").performClick()
         assertThat(mode).isEqualTo(NoiseMode.NOISE_CANCELLING)
+    }
+
+    @Test
+    fun `dashboard scrolls by touch without a top bar`() {
+        show { DashboardScreen(DashboardUiState(ConnectionState.Connected(buds), headphones), DashboardActions()) }
+        repeat(6) { compose.onNodeWithTag("screen_list").performTouchInput { swipeUp() } }
+        compose.onNodeWithTag("disconnect").assertIsDisplayed()
     }
 
     @Test

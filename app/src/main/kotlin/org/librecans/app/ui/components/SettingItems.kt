@@ -35,7 +35,7 @@ fun SwitchItem(
     SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        shapes = ListItemDefaults.segmentedShapes(segment.index, segment.count),
+        shapes = segment.shapes(),
         modifier = modifier,
         enabled = enabled,
         colors = toggleColors(),
@@ -70,7 +70,7 @@ fun NavigationItem(
 ) {
     SegmentedListItem(
         onClick = onClick,
-        shapes = ListItemDefaults.segmentedShapes(segment.index, segment.count),
+        shapes = segment.shapes(),
         modifier = modifier,
         enabled = enabled,
         leadingContent = leading ?: icon?.let { { Icon(painterResource(it), contentDescription = null) } },
@@ -82,7 +82,7 @@ fun NavigationItem(
 @Composable
 fun InfoItem(title: String, value: String, segment: Segment, modifier: Modifier = Modifier, @DrawableRes icon: Int? = null) {
     SegmentedListItem(
-        shapes = ListItemDefaults.segmentedShapes(segment.index, segment.count),
+        shapes = segment.shapes(),
         modifier = modifier,
         leadingContent = icon?.let { { Icon(painterResource(it), contentDescription = null) } },
         supportingContent = { Text(value) },

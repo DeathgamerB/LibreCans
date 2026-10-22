@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -87,7 +86,7 @@ fun SliderItem(
     enabled: Boolean = true,
 ) {
     Surface(
-        shape = ListItemDefaults.segmentedShapes(segment.index, segment.count).shape,
+        shape = segment.shapes().shape,
         color = MaterialTheme.colorScheme.surface,
         modifier = modifier.fillMaxWidth(),
     ) {

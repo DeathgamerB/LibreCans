@@ -7,7 +7,6 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -23,7 +22,6 @@ import org.librecans.app.R
 import org.librecans.app.data.bluetooth.DeviceKind
 import org.librecans.app.data.bluetooth.SonyDevices
 import org.librecans.app.ui.common.appViewModel
-import org.librecans.app.ui.common.codecLabel
 import org.librecans.app.ui.common.eqPresetLabel
 import org.librecans.app.ui.common.touchPresetLabel
 import org.librecans.app.ui.components.AppScaffold
@@ -36,7 +34,6 @@ import org.librecans.protocol.model.TouchKeys
 
 @Composable
 fun DashboardEntry(
-    onBack: () -> Unit,
     onOpenEqualizer: () -> Unit,
     onOpenTouchControls: () -> Unit,
     onOpenDeviceSettings: () -> Unit,
@@ -46,7 +43,6 @@ fun DashboardEntry(
     DashboardScreen(
         state = state,
         actions = DashboardActions(
-            onBack = onBack,
             onNoiseMode = viewModel::setNoiseMode,
             onAmbientLevel = viewModel::setAmbientLevel,
             onFocusOnVoice = viewModel::setFocusOnVoice,
@@ -63,7 +59,6 @@ fun DashboardEntry(
 }
 
 data class DashboardActions(
-    val onBack: () -> Unit = {},
     val onNoiseMode: (NoiseMode) -> Unit = {},
     val onAmbientLevel: (Int, Boolean) -> Unit = { _, _ -> },
     val onFocusOnVoice: (Boolean) -> Unit = {},
@@ -83,23 +78,9 @@ fun DashboardScreen(state: DashboardUiState, actions: DashboardActions) {
     val target = state.connection.target
     val name = headphones.identity.modelName ?: target?.name.orEmpty()
     val kind = target?.kind ?: SonyDevices.kindOf(name).takeIf { name.isNotEmpty() } ?: DeviceKind.EARBUDS
-    val subtitle = listOfNotNull(
-        stringResource(R.string.status_connected),
-        headphones.codec?.let { codecLabel(it) },
-        stringResource(R.string.dashboard_demo_badge).takeIf { target?.isDemo == true },
-    ).joinToString(" · ")
     val customizeTitle = stringResource(R.string.dashboard_section_customize)
 
-    AppScaffold(
-        title = name,
-        subtitle = subtitle,
-        onBack = actions.onBack,
-        actions = {
-            IconButton(onClick = actions.onOpenDeviceSettings) {
-                Icon(painterResource(R.drawable.ic_settings), stringResource(R.string.dashboard_device_settings))
-            }
-        },
-    ) {
+    AppScaffold(title = null) {
         item(key = "hero") {
             HeroCard(kind, headphones.batteries, headphones.noiseControl?.mode, Modifier.animateItem())
         }

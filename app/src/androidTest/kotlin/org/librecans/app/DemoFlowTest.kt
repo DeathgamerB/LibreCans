@@ -45,7 +45,7 @@ class DemoFlowTest {
     @Test
     fun connectsToDemoAndShowsLiveState() {
         connectDemo()
-        compose.onNodeWithText("WF-1000XM5").assertIsDisplayed()
+        compose.onNodeWithTag("hero_card").assertIsDisplayed()
         compose.onNodeWithTag("noise_card").assertIsDisplayed()
     }
 

@@ -75,7 +75,6 @@
     <string name="dashboard_touch_summary">Left: %1$s · Right: %2$s</string>
     <string name="dashboard_device_settings">Device settings</string>
     <string name="dashboard_device_settings_summary">Speak-to-Chat, wearing detection, power and more</string>
-    <string name="dashboard_demo_badge">Demo</string>
     <string name="dashboard_simulate_tap">Simulate earbud tap</string>
 
     <!-- Noise modes -->

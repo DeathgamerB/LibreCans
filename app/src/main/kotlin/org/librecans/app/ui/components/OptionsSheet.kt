@@ -59,7 +59,7 @@ fun <T> OptionsSheet(
                         onSelect(option)
                         scope.launch { state.hide() }.invokeOnCompletion { onDismiss() }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index, options.size),
+                    shapes = segmentShapes(index, options.size),
                     leadingContent = leading?.let { { it(option) } },
                     supportingContent = summary?.let { s -> s(option)?.let { { Text(it) } } },
                     trailingContent = { RadioButton(selected = isSelected, onClick = null) },

@@ -63,7 +63,6 @@ fun AppNavigation(connection: StateFlow<ConnectionState>) {
             }
             entry<DashboardRoute> {
                 DashboardEntry(
-                    onBack = { backStack.removeLastOrNull() },
                     onOpenEqualizer = { backStack.push(EqualizerRoute) },
                     onOpenTouchControls = { backStack.push(TouchControlsRoute) },
                     onOpenDeviceSettings = { backStack.push(DeviceSettingsRoute) },

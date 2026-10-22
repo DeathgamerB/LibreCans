@@ -30,3 +30,6 @@ captures/
 
 # Upstream sources kept out of the repo
 sonybridge_source/
+
+# Python
+__pycache__/

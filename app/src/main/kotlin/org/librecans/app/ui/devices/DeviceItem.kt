@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +29,7 @@ import org.librecans.app.data.bluetooth.DeviceKind
 import org.librecans.app.data.bluetooth.PairedDevice
 import org.librecans.app.data.connection.ConnectionState
 import org.librecans.app.ui.components.Segment
+import org.librecans.app.ui.components.shapes
 
 @Composable
 fun DeviceItem(
@@ -98,7 +98,7 @@ private fun ConnectableItem(
 ) {
     SegmentedListItem(
         onClick = onClick,
-        shapes = ListItemDefaults.segmentedShapes(segment.index, segment.count),
+        shapes = segment.shapes(),
         modifier = modifier,
         leadingContent = { DeviceAvatar(kind, highlighted = connected || connecting) },
         supportingContent = { Text(status) },

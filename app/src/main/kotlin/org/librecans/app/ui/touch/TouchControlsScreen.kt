@@ -1,7 +1,6 @@
 package org.librecans.app.ui.touch
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedListItem
@@ -27,6 +26,7 @@ import org.librecans.app.ui.components.AppScaffold
 import org.librecans.app.ui.components.OptionsSheet
 import org.librecans.app.ui.components.SectionHeader
 import org.librecans.app.ui.components.ShapedIcon
+import org.librecans.app.ui.components.segmentShapes
 
 @Composable
 fun TouchControlsEntry(onBack: () -> Unit) {
@@ -74,7 +74,7 @@ fun TouchControlsScreen(
                     SegmentedListItem(
                         selected = state.ambientCycle == function,
                         onClick = { onSetAmbientCycle(function) },
-                        shapes = ListItemDefaults.segmentedShapes(index, state.cycleOptions.size),
+                        shapes = segmentShapes(index, state.cycleOptions.size),
                         trailingContent = { RadioButton(selected = state.ambientCycle == function, onClick = null) },
                         modifier = Modifier.animateItem().testTag("cycle_$function"),
                     ) { Text(stringResource(ambientCycleLabel(function))) }

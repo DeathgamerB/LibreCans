@@ -17,7 +17,7 @@ fun SectionHeader(text: String, modifier: Modifier = Modifier) {
         style = MaterialTheme.typography.titleSmallEmphasized,
         color = MaterialTheme.colorScheme.primary,
         modifier = modifier
-            .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
             .semantics { heading() },
     )
 }
