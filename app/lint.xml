@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Adaptive launcher icons only merge reliably from the versioned folder. -->
+    <issue id="ObsoleteSdkInt">
+        <ignore path="src/main/res/mipmap-anydpi-v26" />
+    </issue>
+    <!-- The monochrome layer intentionally reuses the foreground artwork. -->
+    <issue id="IconDuplicates" severity="ignore" />
+</lint>

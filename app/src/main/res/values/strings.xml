@@ -1,3 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">LibreCans</string>
+    <string name="app_name" translatable="false">LibreCans</string>
+    <string name="app_tagline">Your Sony headphones, your rules</string>
+
+    <!-- General -->
+    <string name="action_back">Back</string>
+    <string name="action_retry">Try again</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_switch_noise_mode">Switch noise mode</string>
+    <string name="action_about">About</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_change">Change</string>
+    <string name="unknown">Unknown</string>
+
+    <!-- Connection status -->
+    <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_connecting_attempt">Connecting… (attempt %1$d)</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_waiting_for_headphones">Waiting for headphones…</string>
+    <string name="status_audio_connected">Connected for audio</string>
+    <string name="status_paired">Paired</string>
+    <string name="failure_bluetooth_unavailable">This device has no Bluetooth.</string>
+    <string name="failure_bluetooth_off">Bluetooth is turned off.</string>
+    <string name="failure_no_permission">LibreCans needs the Nearby devices permission.</string>
+    <string name="failure_not_found">The headphones could not be found.</string>
+    <string name="failure_connection_failed">Couldn\'t reach the headphones. Make sure they are on and connected to this phone.</string>
+    <string name="failure_no_response">The headphones did not answer.</string>
+    <string name="failure_unsupported_protocol">These headphones use an older protocol that LibreCans does not support yet.</string>
+    <string name="failure_connection_lost">The connection was lost.</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Headphone connection</string>
+    <string name="notification_channel_description">Keeps LibreCans connected to your headphones in the background.</string>
+
+    <!-- Devices -->
+    <string name="devices_title">LibreCans</string>
+    <string name="devices_section_paired">Paired headphones</string>
+    <string name="devices_empty_title">No Sony headphones paired</string>
+    <string name="devices_empty_body">Pair your headphones in the Android Bluetooth settings and they will show up here.</string>
+    <string name="devices_open_bluetooth_settings">Bluetooth settings</string>
+    <string name="devices_permission_title">Allow nearby devices</string>
+    <string name="devices_permission_body">LibreCans talks to your paired headphones directly over Bluetooth. Nothing leaves your phone.</string>
+    <string name="devices_permission_grant">Allow</string>
+    <string name="devices_bluetooth_off_title">Bluetooth is off</string>
+    <string name="devices_bluetooth_off_body">Turn on Bluetooth to control your headphones.</string>
+    <string name="devices_bluetooth_enable">Turn on</string>
+    <string name="devices_demo_title">Demo headphones</string>
+    <string name="devices_demo_body">A simulated WF-1000XM5 that speaks the real protocol</string>
+    <string name="devices_section_demo">Testing</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_battery_left">Left</string>
+    <string name="dashboard_battery_right">Right</string>
+    <string name="dashboard_battery_case">Case</string>
+    <string name="dashboard_battery">Battery</string>
+    <string name="dashboard_battery_unknown">Battery level unknown</string>
+    <string name="dashboard_battery_content_description">%1$s battery %2$d%%</string>
+    <string name="dashboard_charging">Charging</string>
+    <string name="dashboard_noise_title">Noise control</string>
+    <string name="dashboard_ambient_level">Ambient sound level</string>
+    <string name="dashboard_focus_on_voice">Focus on voice</string>
+    <string name="dashboard_focus_on_voice_summary">Lets voices through while filtering other noise</string>
+    <string name="dashboard_playback_title">Playback</string>
+    <string name="dashboard_volume">Volume</string>
+    <string name="dashboard_play">Play</string>
+    <string name="dashboard_pause">Pause</string>
+    <string name="dashboard_next">Next track</string>
+    <string name="dashboard_previous">Previous track</string>
+    <string name="dashboard_section_customize">Customize</string>
+    <string name="dashboard_equalizer">Equalizer</string>
+    <string name="dashboard_touch_controls">Touch controls</string>
+    <string name="dashboard_touch_summary">Left: %1$s · Right: %2$s</string>
+    <string name="dashboard_device_settings">Device settings</string>
+    <string name="dashboard_device_settings_summary">Speak-to-Chat, wearing detection, power and more</string>
+    <string name="dashboard_demo_badge">Demo</string>
+    <string name="dashboard_simulate_tap">Simulate earbud tap</string>
+
+    <!-- Noise modes -->
+    <string name="noise_mode_nc">Noise canceling</string>
+    <string name="noise_mode_nc_short">NC</string>
+    <string name="noise_mode_ambient">Ambient sound</string>
+    <string name="noise_mode_ambient_short">Ambient</string>
+    <string name="noise_mode_off">Off</string>
+
+    <!-- Equalizer -->
+    <string name="eq_title">Equalizer</string>
+    <string name="eq_presets">Presets</string>
+    <string name="eq_custom_bands">Custom</string>
+    <string name="eq_clear_bass">Clear Bass</string>
+    <string name="eq_unavailable">The equalizer is not available in the current sound mode.</string>
+    <string name="eq_band_content_description">%1$s band</string>
+    <string name="eq_custom_hint">Moving a slider switches to your custom curve.</string>
+    <string name="eq_preset_off">Off</string>
+    <string name="eq_preset_bright">Bright</string>
+    <string name="eq_preset_excited">Excited</string>
+    <string name="eq_preset_mellow">Mellow</string>
+    <string name="eq_preset_relaxed">Relaxed</string>
+    <string name="eq_preset_vocal">Vocal</string>
+    <string name="eq_preset_treble">Treble Boost</string>
+    <string name="eq_preset_bass">Bass Boost</string>
+    <string name="eq_preset_speech">Speech</string>
+    <string name="eq_preset_custom">Custom</string>
+    <string name="eq_preset_user_1">Custom 1</string>
+    <string name="eq_preset_user_2">Custom 2</string>
+    <string name="eq_preset_unknown">Preset %1$s</string>
+
+    <!-- Touch controls -->
+    <string name="touch_title">Touch controls</string>
+    <string name="touch_intro">Choose what each earbud does when you tap it. Pick “Not assigned” to ignore taps on that side.</string>
+    <string name="touch_left">Left earbud</string>
+    <string name="touch_right">Right earbud</string>
+    <string name="touch_key">Key %1$d</string>
+    <string name="touch_choose">Choose a function</string>
+    <string name="touch_cycle_title">Noise control cycle</string>
+    <string name="touch_cycle_summary">Modes a tap on the ambient sound earbud cycles through</string>
+    <string name="touch_unavailable">These headphones do not report customizable touch controls.</string>
+    <string name="touch_no_gestures">Taps do nothing</string>
+    <string name="touch_gesture_format">%1$s: %2$s</string>
+
+    <string name="touch_preset_ambient">Ambient sound control</string>
+    <string name="touch_preset_ambient_quick_access">Ambient sound control + Quick Access</string>
+    <string name="touch_preset_playback">Playback control</string>
+    <string name="touch_preset_track">Track control</string>
+    <string name="touch_preset_volume">Volume control</string>
+    <string name="touch_preset_voice_assistant">Voice assistant</string>
+    <string name="touch_preset_google">Google Assistant</string>
+    <string name="touch_preset_alexa">Amazon Alexa</string>
+    <string name="touch_preset_quick_access">Quick Access</string>
+    <string name="touch_preset_none">Not assigned</string>
+    <string name="touch_preset_unknown">Function %1$s</string>
+
+    <string name="touch_action_tap">Tap</string>
+    <string name="touch_action_double_tap">Double tap</string>
+    <string name="touch_action_triple_tap">Triple tap</string>
+    <string name="touch_action_repeat_tap">Repeated taps</string>
+    <string name="touch_action_hold">Tap and hold</string>
+    <string name="touch_action_double_tap_hold">Double tap and hold</string>
+    <string name="touch_action_long_press">Long press</string>
+
+    <string name="touch_function_none">Nothing</string>
+    <string name="touch_function_nc_asm_off">NC → Ambient → Off</string>
+    <string name="touch_function_nc_asm">NC ↔ Ambient</string>
+    <string name="touch_function_nc_off">NC ↔ Off</string>
+    <string name="touch_function_asm_off">Ambient ↔ Off</string>
+    <string name="touch_function_quick_attention">Quick Attention</string>
+    <string name="touch_function_nc_optimizer">NC Optimizer</string>
+    <string name="touch_function_play_pause">Play / pause</string>
+    <string name="touch_function_next">Next track</string>
+    <string name="touch_function_previous">Previous track</string>
+    <string name="touch_function_volume_up">Volume up</string>
+    <string name="touch_function_volume_down">Volume down</string>
+    <string name="touch_function_voice_assistant">Voice assistant</string>
+    <string name="touch_function_notifications">Read notifications</string>
+    <string name="touch_function_google">Talk to Google</string>
+    <string name="touch_function_alexa">Talk to Alexa</string>
+    <string name="touch_function_spotify">Spotify Tap</string>
+    <string name="touch_function_quick_access">Quick Access</string>
+    <string name="touch_function_other">Function %1$s</string>
+
+    <string name="cycle_nc_asm_off">Noise canceling → Ambient → Off</string>
+    <string name="cycle_nc_asm">Noise canceling ↔ Ambient sound</string>
+    <string name="cycle_nc_off">Noise canceling ↔ Off</string>
+    <string name="cycle_asm_off">Ambient sound ↔ Off</string>
+
+    <!-- Device settings -->
+    <string name="settings_title">Device settings</string>
+    <string name="settings_section_sound">Sound</string>
+    <string name="settings_section_conversation">Conversation</string>
+    <string name="settings_section_wearing">Wearing &amp; power</string>
+    <string name="settings_section_connection">Connection</string>
+    <string name="settings_section_device">About these headphones</string>
+    <string name="settings_upscaling">DSEE upscaling</string>
+    <string name="settings_upscaling_summary">Restores detail in compressed music (%1$s)</string>
+    <string name="settings_connection_priority">Bluetooth connection quality</string>
+    <string name="priority_sound_quality">Prioritize sound quality</string>
+    <string name="priority_stable_connection">Prioritize stable connection</string>
+    <string name="priority_low_latency">Low latency (beta)</string>
+    <string name="settings_speak_to_chat">Speak-to-Chat</string>
+    <string name="settings_speak_to_chat_summary">Pauses music and lets ambient sound in when you talk</string>
+    <string name="settings_speak_to_chat_sensitivity">Voice detection sensitivity</string>
+    <string name="settings_speak_to_chat_timeout">Mode-off timer</string>
+    <string name="sensitivity_auto">Automatic</string>
+    <string name="sensitivity_high">High</string>
+    <string name="sensitivity_low">Low</string>
+    <string name="timeout_short">Short (about 5 s)</string>
+    <string name="timeout_standard">Standard (about 15 s)</string>
+    <string name="timeout_long">Long (about 30 s)</string>
+    <string name="timeout_never">Don\'t end automatically</string>
+    <string name="settings_head_gestures">Head gestures</string>
+    <string name="settings_head_gestures_summary">Nod or shake your head to answer or decline calls</string>
+    <string name="settings_adaptive_volume">Adaptive volume</string>
+    <string name="settings_adaptive_volume_summary">Adjusts the volume to your surroundings</string>
+    <string name="settings_pause_when_removed">Pause when taken off</string>
+    <string name="settings_pause_when_removed_summary">Pauses playback when you remove the headphones</string>
+    <string name="settings_auto_power_off">Automatic power off</string>
+    <string name="apo_5_min">After 5 minutes</string>
+    <string name="apo_15_min">After 15 minutes</string>
+    <string name="apo_30_min">After 30 minutes</string>
+    <string name="apo_60_min">After 1 hour</string>
+    <string name="apo_180_min">After 3 hours</string>
+    <string name="apo_when_removed">When taken off</string>
+    <string name="apo_disabled">Never</string>
+    <string name="settings_voice_guidance">Voice guidance</string>
+    <string name="settings_voice_guidance_summary">Spoken announcements for modes and battery</string>
+    <string name="settings_voice_guidance_volume">Voice guidance volume</string>
+    <string name="settings_power_off">Turn off headphones</string>
+    <string name="settings_power_off_confirm_title">Turn off the headphones?</string>
+    <string name="settings_power_off_confirm_body">You will need to turn them back on by hand.</string>
+    <string name="settings_model">Model</string>
+    <string name="settings_firmware">Firmware</string>
+    <string name="settings_codec">Codec</string>
+    <string name="settings_address">Bluetooth address</string>
+    <string name="settings_protocol">Protocol</string>
+    <string name="settings_protocol_value">MDR v2 (0x%1$s)</string>
+
+    <string name="gs_multipoint">Connect to 2 devices at once</string>
+    <string name="gs_multipoint_summary">Stay connected to two devices and switch between them</string>
+    <string name="gs_multipoint_summary_ldac">Stay connected to two devices. LDAC turns off while two are connected.</string>
+    <string name="gs_sidetone">Capture voice during calls</string>
+    <string name="gs_sidetone_summary">Hear your own voice while you are on a call</string>
+    <string name="gs_touch_panel">Touch sensor control panel</string>
+    <string name="gs_touch_panel_summary">Turn off to ignore all taps on the earbuds</string>
+
+    <string name="codec_sbc" translatable="false">SBC</string>
+    <string name="codec_aac" translatable="false">AAC</string>
+    <string name="codec_ldac" translatable="false">LDAC</string>
+    <string name="codec_aptx" translatable="false">aptX</string>
+    <string name="codec_aptx_hd" translatable="false">aptX HD</string>
+    <string name="codec_lc3" translatable="false">LC3</string>
+    <string name="upscaling_dsee" translatable="false">DSEE</string>
+    <string name="upscaling_dsee_hx" translatable="false">DSEE HX</string>
+    <string name="upscaling_dsee_extreme" translatable="false">DSEE Extreme</string>
+    <string name="upscaling_dsee_ultimate" translatable="false">DSEE Ultimate</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_section_appearance">Appearance</string>
+    <string name="about_dynamic_color">Dynamic color</string>
+    <string name="about_dynamic_color_summary">Use colors from your wallpaper</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="about_section_behavior">Behavior</string>
+    <string name="about_auto_connect">Connect automatically</string>
+    <string name="about_auto_connect_summary">Connect when the app opens and your headphones are on</string>
+    <string name="about_keep_connected">Stay connected in the background</string>
+    <string name="about_keep_connected_summary">Shows an ongoing notification and reconnects automatically</string>
+    <string name="about_section_diagnostics">Diagnostics</string>
+    <string name="about_diagnostics">Record protocol log</string>
+    <string name="about_diagnostics_summary">Kept in memory only, cleared when turned off</string>
+    <string name="about_view_log">View protocol log</string>
+    <string name="about_section_info">Information</string>
+    <string name="about_disclaimer_title">Unofficial app</string>
+    <string name="about_disclaimer">LibreCans is not affiliated with, authorized, maintained, sponsored, or endorsed by Sony Corporation or any of its affiliates. All product names, logos, and brands are property of their respective owners.</string>
+    <string name="about_credits">Credits</string>
+    <string name="about_credits_body">Built on the protocol work of SonyHeadphonesClient (Plutoberth, Mr-M33533K5, semvis123, mos9527), SonyBridge (AmitRajput-Dev) and Gadgetbridge.</string>
+    <string name="about_license">License</string>
+    <string name="about_license_body">MIT License</string>
+    <string name="about_source">Source code</string>
+
+    <!-- Diagnostics -->
+    <string name="diagnostics_title">Protocol log</string>
+    <string name="diagnostics_empty">Nothing recorded yet. Connect to your headphones to see traffic.</string>
+    <string name="diagnostics_disabled">Recording is off. Turn it on in About.</string>
+    <string name="diagnostics_share">Share log</string>
+    <string name="diagnostics_clear">Clear log</string>
+    <string name="diagnostics_share_subject">LibreCans protocol log</string>
 </resources>

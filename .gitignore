@@ -1,14 +1,26 @@
+# Reference material (old app and cloned upstream projects)
+.old/
+.references/
+
 # Gradle
 .gradle/
+.kotlin/
 build/
 **/build/
+local.properties
 
 # Android
 *.apk
-*.aar
+*.aab
 *.ap_
-*.der
+*.jks
+*.keystore
 *.pem
+*.der
+*.p12
+*.pk8
+*.p8
+captures/
 
 # IDE / Editor
 .idea/
@@ -16,5 +28,5 @@ build/
 .DS_Store
 *.log
 
-# Submodules/Sources (Confirmed and verified to prevent re-committing)
+# Upstream sources kept out of the repo
 sonybridge_source/

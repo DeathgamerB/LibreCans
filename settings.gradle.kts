@@ -20,5 +20,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "LibreCans"
-include(":app")
 include(":protocol")
+include(":app")
+include(":baselineprofile")

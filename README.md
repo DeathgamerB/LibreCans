@@ -1,69 +1,84 @@
 # LibreCans
 
-**LibreCans** is an independent, native Android application written in Kotlin utilizing Jetpack Compose and Material 3 Expressive-inspired design components. It acts as an autonomous companion for Sony headphones, allowing complete control over Noise Cancelling, Ambient Sound levels, Equalizer, DSEE, and capability-gated options without requiring the official smartphone app or online tracking.
-
-This project is built as a permitted derivative of **SonyBridge** and **SonyHeadphonesClient**, combining reliable RFCOMM SPP protocol implementations with a modern, lightweight Android background service.
-
----
+LibreCans is an independent Android app for Sony headphones, written in Kotlin with Jetpack Compose
+and Material 3 Expressive. It talks to the headphones directly over Bluetooth: no account, no
+cloud, no tracking. It is developed and tested with the **WF-1000XM5** and works with other Sony
+headphones that use the MDR v2 protocol (WH-1000XM5, WF-1000XM4, LinkBuds S, WH-CH720N and more).
 
 ## Features
-- **Ambient Sound Control**: Noise Cancelling, Ambient Sound (0–20 levels), and Off modes.
-- **Focus on Voice**: Capability-gated passthrough toggle (Voice-centric Transparency).
-- **Equalizer**: Presets + full working manual mode (5 configurable manual bands + Clear Bass) with reactive dynamic labels.
-- **DSEE Upscaling**: Dynamic high-frequency audio upscaling toggle.
-- **Battery Levels**: Per-earbud and case indicators for TWS models, or master single level + charging state for over-ear/traditional models.
-- **Hardware Readouts**: Instant lookup of active audio codec, firmware version, and active protocol generation.
-- **Capability-Gated Extras**: Auto Power-Off, Speak-to-Chat, and Adaptive Volume are dynamically queried and rendered *only* if the connected device physically supports them.
-- **Expressive Styling**: Custom premium dark theme with spring-based motion physics and responsive curved card frames.
-- **Foreground Connection Service**: A persistent background service and ongoing notification hold the Bluetooth RFCOMM socket open reliably, preventing connection drops during Doze or system-initiated standby.
-- **Emulator Simulation (Mock Mode)**: An isolated debug toggle enables simulated testing of all WH-CH720N features in an emulator or without physical headphones.
 
----
+* **Noise control**: noise canceling, ambient sound with 20 levels and Focus on Voice.
+* **Touch controls**: choose what each earbud does (ambient sound control, playback,
+  volume, Quick Access) or turn taps off for one side, with every gesture spelled out. Pick which
+  modes the ambient sound tap cycles through.
+* **Equalizer**: the headphones' presets plus a custom 5-band curve with Clear Bass and a live
+  response graph.
+* **Batteries**: left, right and case, live while charging.
+* **Playback**: play/pause, skip and volume.
+* **Device settings**: DSEE, Speak-to-Chat with sensitivity and timeout, head gestures,
+  pause when taken off, automatic power off, voice guidance, multipoint, capture voice during calls,
+  remote power off.
+* **Capability aware**: only controls the headphones report are shown.
+* **Background connection**: an ongoing notification with battery and a noise mode
+  shortcut, reconnecting when the headphones come back.
+* **Private**: settings are AES-GCM encrypted with an Android Keystore key and excluded from
+  backups; the optional protocol log lives in memory only.
 
-## Known Limitations & Testing
-- **Hardware Verification**: Only the **WH-CH720N and Wf-1000xm5** have been hardware-verified by the upstream projects and me; other Sony models (e.g. WH-1000XM3, WH-1000XM4, WH-1000XM5, LinkBuds S, WF-C700N, etc.) are highly expected to work based on shared protocol families.
+## Project layout
 
-## Hardware State & Tracking
-This project reliably fetches dynamic hardware properties. Capabilities such as dual-battery TWS readouts vs. single master battery level, Voice-centric Transparency, Equalizer manual bands, and Speak-to-Chat are robustly verified during connection handshake.
-
-## Architecture
-The project is structured into two modules:
-1. **`:protocol`** (Pure Kotlin module with no Android dependencies):
-   - Handles checksum calculations (`_sumChecksum`), packet escaping/unescaping, and framing (`packageDataForBt` / `unpackBtMessage`).
-   - Translates all protocol commands (v1 & v2 generations) into unit-testable builders.
-2. **`:app`** (Android application module):
-   - **`BluetoothRepository`**: Exposes flows representing the current status and executes connection fallbacks (cached version, then V1 UUID, then V2 UUID).
-   - **`BluetoothConnectionService`**: A thin Android Foreground Service hosting the active repository instance.
-   - **`HeadphonesViewModel`**: Coordinates screen navigation states, active device list loader, and action dispatches.
-   - **UI Layers**: `PairingScreen.kt`, `AncAmbientControl.kt`, `EqualizerControl.kt`, `SettingsControl.kt`, and `AboutScreen.kt` written using modern Compose elements.
-
----
-
-## Build and Run
-
-### Running Unit Tests
-To execute all protocol, checksum, and serialization unit tests:
-```bash
-./gradlew test
+```
+protocol/   Pure Kotlin MDR library: framing, requests, decoders, session, client, simulator
+app/        Android app
+baselineprofile/  Baseline Profile generator and macrobenchmarks
+  data/       Bluetooth (RFCOMM), connection repository, encrypted settings, diagnostics
+  service/    Foreground connection service and notification
+  ui/         One package per screen (devices, dashboard, equalizer, touch, settings, about)
+docs/       Protocol notes
 ```
 
-### Compiling Debug APK
-To assemble the debug build:
+`protocol` contains `SimulatedHeadphones`, a WF-1000XM5 that speaks the real protocol. Tests use
+it, and debug and benchmark builds offer it as **Demo headphones**, so the whole app can be used on an emulator.
+
+## Building
+
+Requirements: JDK 17 or newer (Android Studio's bundled JBR works) and the Android SDK with
+platform 37.
+
 ```bash
-./gradlew :app:assembleDebug
+./gradlew :app:assembleDebug          # app/build/outputs/apk/debug/app-debug.apk
+./gradlew :protocol:test :app:testDebugUnitTest   # JVM and Robolectric tests
+./gradlew :app:connectedDebugAndroidTest           # on a running emulator or device
+./gradlew :app:lintDebug
 ```
-The compiled APK will be available under `app/build/outputs/apk/debug/app-debug.apk`.
 
----
+Android Studio shares run configurations for these in `.run/`. `tools/emulator.sh` starts the
+`LibreCans_Pixel_9_Pro_API_37` test emulator (`--headless` for no window).
 
-## License & Credits
-LibreCans is released under the **MIT License**. See the `LICENSE` file for the full text.
+## Performance
 
-Special thanks to the original open-source creators of the upstream projects:
-- **Plutoberth**, **Mr-M33533K5**, and **semvis123** (SonyHeadphonesClient)
-- **AmitRajput-Dev** (SonyBridge)
-- **GadgetBridge Contributors**
+Debug builds run without R8 and mostly interpreted, so they scroll noticeably worse than what users
+get. Judge smoothness on the `benchmarkRelease` variant (Build Variants in Studio): it is minified
+like release, signed with the debug key, profileable, still has the demo device and installs as
+`org.librecans.app.benchmark` next to a store build.
 
----
+```bash
+./gradlew :app:generateBaselineProfile                       # refresh app/src/release/generated/baselineProfiles
+./gradlew :baselineprofile:connectedBenchmarkReleaseAndroidTest   # frame and startup timing, with and without profile
+python3 tools/measure-scroll.py org.librecans.app.benchmark --runs 5  # dumpsys gfxinfo frame stats while scrolling the demo
+```
 
-*Disclaimer: LibreCans is an independent, unofficial, open-source project and is NOT affiliated with, authorized, maintained, sponsored, or endorsed by Sony Corporation or any of its affiliates.*
+On an emulator add `-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR`
+to the benchmark task.
+
+## Credits
+
+LibreCans builds on the reverse-engineering work of
+[SonyHeadphonesClient](https://github.com/Plutoberth/SonyHeadphonesClient) (Plutoberth, Mr-M33533K5,
+semvis123), its [mos9527 fork](https://github.com/mos9527/SonyHeadphonesClient),
+[SonyBridge](https://github.com/AmitRajput-Dev/SonyBridge) (AmitRajput-Dev) and
+[Gadgetbridge](https://codeberg.org/Freeyourgadget/Gadgetbridge). See `NOTICE.md`.
+
+Released under the MIT License, see `LICENSE`.
+
+*LibreCans is not affiliated with, authorized, maintained, sponsored, or endorsed by Sony
+Corporation or any of its affiliates.*

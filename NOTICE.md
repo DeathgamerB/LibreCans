@@ -1,24 +1,23 @@
-# NOTICE & CREDITS
+# Notice and credits
 
-LibreCans is an independent, unofficial, open-source Android application for managing Sony headphones.
-It is NOT affiliated with, authorized, maintained, sponsored, or endorsed by Sony Corporation or any of its affiliates.
+LibreCans is an independent, unofficial open-source Android app for Sony headphones. It is not
+affiliated with, authorized, maintained, sponsored, or endorsed by Sony Corporation or any of its
+affiliates.
 
-This project is a permitted derivative of, and reuses ideas, logic, and protocol reverse-engineering from, the following open-source projects under the MIT License:
+LibreCans is released under the MIT License (see `LICENSE`). Its protocol implementation was
+written from the documentation, code and captures of these projects:
 
-1. **SonyBridge**
-   - Repository: https://github.com/AmitRajput-Dev/SonyBridge
-   - Developed by: AmitRajput-Dev
+1. **SonyHeadphonesClient** by Plutoberth, Mr-M33533K5, semvis123 and contributors (MIT)
+   https://github.com/Plutoberth/SonyHeadphonesClient
+2. **SonyHeadphonesClient (mos9527 fork)** by mos9527, Amr Satrio and contributors (MIT)
+   https://github.com/mos9527/SonyHeadphonesClient
+   The WF-1000XM5 frames used as test fixtures come from its replay tests.
+3. **SonyBridge** by AmitRajput-Dev (MIT)
+   https://github.com/AmitRajput-Dev/SonyBridge
+4. **Gadgetbridge** by the Gadgetbridge contributors (AGPL-3.0)
+   https://codeberg.org/Freeyourgadget/Gadgetbridge
+   Consulted as a protocol reference only; no Gadgetbridge code is included.
 
-2. **SonyHeadphonesClient**
-   - Repository: https://github.com/Plutoberth/SonyHeadphonesClient
-   - Developed by: Plutoberth, Mr-M33533K5, semvis123
+Material Symbols icons are by Google, licensed under the Apache License 2.0.
 
-3. **GadgetBridge** (specifically the Sony protocol reverse-engineering/implementation)
-   - Repository: https://codeberg.org/Freeyourgadget/GadgetBridge
-   - Developed by: GadgetBridge Contributors
-
-We thank the developers of these incredible upstream projects for their tireless work reverse-engineering the Sony Headphone RFCOMM protocol and sharing their code under open licenses.
-
-## License
-
-LibreCans is released under the MIT License. See the `LICENSE` file for the full text.
+Thank you to everyone who reverse-engineered the Sony protocol and shared it openly.
